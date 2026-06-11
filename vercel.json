@@ -1,0 +1,24 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/vacinas-mes",
+      "schedule": "0 8 1 * *"
+    },
+    {
+      "path": "/api/financeiro/recorrentes",
+      "schedule": "0 7 1 * *"
+    },
+    {
+      "path": "/api/cron/extrato-mensal",
+      "schedule": "0 9 1 * *"
+    },
+    {
+      "path": "/api/cron/hotel-relatorio",
+      "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron/pagamento-motorista",
+      "schedule": "0 10 * * 1"
+    }
+  ]
+}
