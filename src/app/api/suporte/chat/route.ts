@@ -39,6 +39,13 @@ export async function POST(request: Request) {
   const messages = (body.messages ?? []).filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string').slice(-20)
   if (messages.length === 0) return NextResponse.json({ error: 'sem mensagens' }, { status: 400 })
 
+  // Sem IA configurada: responde de forma útil direcionando ao atendimento humano (que usa só e-mail)
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return NextResponse.json({
+      reply: 'No momento o atendimento por IA está indisponível, mas a nossa equipe pode te ajudar. Toque em "Falar com a equipe Aupipet" aqui embaixo, escreva sua dúvida e retornamos em até 48h. 🐾',
+    })
+  }
+
   const empresa = await getEmpresa()
   const contexto = empresa ? `\n\nContexto: a empresa do gestor se chama "${empresa.nome}" (segmento: ${empresa.segmento}, plano: ${empresa.plano}).` : ''
 

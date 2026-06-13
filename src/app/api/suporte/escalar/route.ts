@@ -85,8 +85,12 @@ export async function POST(request: Request) {
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
+    // O e-mail de suporte vai sempre para o dono da conta, então usamos o
+    // remetente de teste da Resend (onboarding@resend.dev), que funciona SEM
+    // domínio verificado. Quando aupipet.com.br for verificado na Resend,
+    // basta definir SUPORTE_FROM para enviar com a marca.
     await resend.emails.send({
-      from: process.env.RESEND_FROM || 'Aupi <noreply@aupipet.com.br>',
+      from: process.env.SUPORTE_FROM || 'Aupipet Suporte <onboarding@resend.dev>',
       to: DESTINO,
       replyTo: contato.includes('@') ? contato : undefined,
       subject: `[Suporte Aupipet] ${empresaNome} — ${assunto}`,
