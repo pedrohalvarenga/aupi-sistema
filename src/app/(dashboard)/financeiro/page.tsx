@@ -14,9 +14,9 @@ import type { SaldoConta, Receita, Despesa } from '@/types/financeiro'
 
 function ContaCard({ conta }: { conta: SaldoConta }) {
   const icones: Record<string, React.ElementType> = {
-    pagbank_pj: CreditCard,
-    c6_pf:      Wallet,
-    dinheiro:   Banknote,
+    maquina_cartao: CreditCard,
+    banco:          Wallet,
+    dinheiro:       Banknote,
   }
   const Icon = icones[conta.tipo] ?? Wallet
   const positivo = conta.saldo_atual >= 0
@@ -132,7 +132,14 @@ export default async function FinanceiroPage() {
 
       {/* Saldos por conta */}
       <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Por conta</p>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Por conta</p>
+          {isAdmin && (
+            <Link href="/financeiro/contas" className="text-xs font-semibold" style={{ color: 'var(--brand-purple)' }}>
+              Gerenciar contas
+            </Link>
+          )}
+        </div>
         <div className="flex flex-col gap-2">
           {(saldos ?? []).map(c => <ContaCard key={c.id} conta={c} />)}
         </div>

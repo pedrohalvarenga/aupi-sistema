@@ -49,9 +49,9 @@ export const FORMA_PAGAMENTO_LABELS: Record<FormaPagamento, string> = {
 }
 
 export const CONTA_TIPO_LABELS: Record<TipoConta, string> = {
-  pagbank_pj: 'PagBank PJ',
-  c6_pf:      'C6 PF',
-  dinheiro:   'Dinheiro',
+  banco:          'Conta bancária',
+  maquina_cartao: 'Máquina de cartão',
+  dinheiro:       'Dinheiro',
 }
 
 export const STATUS_LABELS: Record<StatusFinanceiro, string> = {

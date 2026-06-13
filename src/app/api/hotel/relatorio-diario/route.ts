@@ -116,7 +116,7 @@ async function gerarEEnviar(supabase: any, empresa: EmpresaInfo, data: string, r
     const html = buildHtmlRelatorio({ empresa, data: dataFmt, entradas, saidas, hospedados, totalSaidas, plantonista })
 
     const { error: emailError } = await resend.emails.send({
-      from: process.env.RESEND_FROM ?? 'Aulado <noreply@aulado.com.br>',
+      from: process.env.RESEND_FROM ?? 'Aupi <noreply@aupipet.com.br>',
       to: emails,
       subject: `${empresa.nome} — Relatório Hotel ${data}`,
       html,

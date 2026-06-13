@@ -19,6 +19,25 @@ export function getLimites(plano: string): LimitesPlano {
   return LIMITES[plano] ?? LIMITES.essencial
 }
 
+// ── Preços e info dos planos (para a tela de assinatura) ────
+export interface PlanoInfo {
+  id: string
+  nome: string
+  precoCentavos: number
+  descricao: string
+  destaque?: boolean
+}
+
+export const PLANOS: PlanoInfo[] = [
+  { id: 'essencial',    nome: 'Essencial',    precoCentavos: 19700, descricao: '1 unidade, 2 usuários' },
+  { id: 'profissional', nome: 'Profissional', precoCentavos: 39700, descricao: 'White label, usuários ilimitados', destaque: true },
+  { id: 'escala',       nome: 'Escala',       precoCentavos: 69700, descricao: 'Multi-unidades, tudo ilimitado' },
+]
+
+export function getPlanoInfo(id: string): PlanoInfo | undefined {
+  return PLANOS.find(p => p.id === id)
+}
+
 export function podeCriarUsuario(empresa: Empresa, totalUsuariosAtual: number): boolean {
   const { maxUsuarios } = getLimites(empresa.plano)
   if (maxUsuarios === -1) return true

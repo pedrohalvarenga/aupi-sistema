@@ -55,7 +55,7 @@ export default function NovaReceitaPage() {
   // Atualiza taxa padrão quando muda forma e conta
   useEffect(() => {
     const conta = contas.find(c => c.id === contaId)
-    if ((forma === 'debito' || forma === 'credito') && conta?.tipo === 'pagbank_pj') {
+    if ((forma === 'debito' || forma === 'credito') && conta?.tipo === 'maquina_cartao') {
       setTaxaCartao(TAXAS_PADRAO[forma])
     } else {
       setTaxaCartao('')
@@ -91,7 +91,7 @@ export default function NovaReceitaPage() {
   }, [petBusca])
 
   const conta = contas.find(c => c.id === contaId)
-  const mostrarTaxa = (forma === 'debito' || forma === 'credito') && conta?.tipo === 'pagbank_pj'
+  const mostrarTaxa = (forma === 'debito' || forma === 'credito') && conta?.tipo === 'maquina_cartao'
   const valorLiquido = mostrarTaxa && typeof taxaCartao === 'number' && taxaCartao > 0
     ? calcValorLiquido(valor, taxaCartao) : null
 

@@ -106,7 +106,7 @@ export default async function FinanceiroDashboardPage() {
     .limit(10)
 
   const mesNome = hoje.toLocaleDateString('pt-BR', { month: 'long' })
-  const contaIcones: Record<string, React.ElementType> = { pagbank_pj: CreditCard, c6_pf: Wallet, dinheiro: Banknote }
+  const contaIcones: Record<string, React.ElementType> = { maquina_cartao: CreditCard, banco: Wallet, dinheiro: Banknote }
 
   return (
     <div className="py-6 flex flex-col gap-5">

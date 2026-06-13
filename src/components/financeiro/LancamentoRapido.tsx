@@ -84,7 +84,7 @@ export default function LancamentoRapido() {
     const supabase = createClient()
     const valor = parseCurrencyInput(valorRaw)
     const contaSel = contas.find(c => c.id === conta)
-    const taxa = (tipo === 'receita' && (forma === 'debito' || forma === 'credito') && contaSel?.tipo === 'pagbank_pj')
+    const taxa = (tipo === 'receita' && (forma === 'debito' || forma === 'credito') && contaSel?.tipo === 'maquina_cartao')
       ? TAXAS_PADRAO[forma] : undefined
     const valor_liquido = taxa ? calcValorLiquido(valor, taxa) : undefined
 
@@ -120,7 +120,7 @@ export default function LancamentoRapido() {
     ? contas
     : forma === 'dinheiro'
     ? contas.filter(c => c.tipo === 'dinheiro')
-    : contas.filter(c => c.tipo === 'pagbank_pj')
+    : contas.filter(c => c.tipo === 'maquina_cartao')
 
   return (
     <>
@@ -316,7 +316,7 @@ export default function LancamentoRapido() {
                     className="py-3 px-4 rounded-2xl bg-gray-50 border-2 border-gray-200 text-gray-800 font-bold text-sm text-left hover:border-brand-purple hover:bg-purple-50 transition-colors active:scale-95"
                   >
                     {c.nome}
-                    {tipo === 'receita' && (forma === 'debito' || forma === 'credito') && c.tipo === 'pagbank_pj' && (
+                    {tipo === 'receita' && (forma === 'debito' || forma === 'credito') && c.tipo === 'maquina_cartao' && (
                       <span className="text-xs text-gray-400 font-normal block">
                         Taxa {TAXAS_PADRAO[forma]}% → líquido {formatCurrency(calcValorLiquido(parseCurrencyInput(valorRaw), TAXAS_PADRAO[forma]))}
                       </span>

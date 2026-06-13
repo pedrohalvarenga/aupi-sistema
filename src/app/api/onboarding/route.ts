@@ -69,5 +69,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: msg }, { status: 400 })
   }
 
+  // 3. Contas financeiras iniciais (genéricas e zeradas — o dono edita depois)
+  await admin.from('contas_financeiras').insert([
+    { empresa_id: empresa.id, nome: 'Conta Bancária 01', tipo: 'banco', saldo_inicial: 0, ativo: true },
+    { empresa_id: empresa.id, nome: 'Conta Bancária 02', tipo: 'banco', saldo_inicial: 0, ativo: true },
+    { empresa_id: empresa.id, nome: 'Máquina de Cartão', tipo: 'maquina_cartao', saldo_inicial: 0, ativo: true },
+    { empresa_id: empresa.id, nome: 'Dinheiro (Caixa)', tipo: 'dinheiro', saldo_inicial: 0, ativo: true },
+  ])
+
   return NextResponse.json({ ok: true, slug: empresa.slug })
 }

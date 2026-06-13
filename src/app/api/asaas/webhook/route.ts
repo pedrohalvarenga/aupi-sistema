@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 /**
- * Webhook do Asaas — cobrança recorrente da plataforma Aulado.
+ * Webhook do Asaas — cobrança recorrente da plataforma Aupi.
  *
  * Configurar no painel do Asaas:
  *   URL: https://SEU-DOMINIO/api/asaas/webhook

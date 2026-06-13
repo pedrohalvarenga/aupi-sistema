@@ -8,8 +8,10 @@ import {
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import { type UserRole } from '@/types'
+import { type UserRole, type Empresa } from '@/types'
 import { useState } from 'react'
+
+type ModuloCampo = 'mod_creche' | 'mod_hotel' | 'mod_banho_tosa' | 'mod_transporte' | 'mod_financeiro'
 
 // ── Barra de acesso rápido ──────────────────────────────────
 interface QuickItem {
@@ -17,16 +19,17 @@ interface QuickItem {
   label: string
   icon: React.ElementType
   roles: UserRole[]
+  modulo?: ModuloCampo
 }
 
 const quickItems: QuickItem[] = [
-  { href: '/creche',     label: 'Chamada',    icon: CalendarCheck, roles: ['admin', 'recepcao'] },
-  { href: '/hotel',      label: 'Hotel',      icon: Building2,     roles: ['admin', 'recepcao'] },
-  { href: '/banho-tosa',   label: 'Banho',      icon: Scissors, roles: ['admin', 'recepcao', 'banho_tosa'] },
-  { href: '/transportes',  label: 'Corridas',   icon: Car,      roles: ['motorista'] },
+  { href: '/creche',     label: 'Chamada',    icon: CalendarCheck, roles: ['admin', 'recepcao'], modulo: 'mod_creche' },
+  { href: '/hotel',      label: 'Hotel',      icon: Building2,     roles: ['admin', 'recepcao'], modulo: 'mod_hotel' },
+  { href: '/banho-tosa',   label: 'Banho',      icon: Scissors, roles: ['admin', 'recepcao', 'banho_tosa'], modulo: 'mod_banho_tosa' },
+  { href: '/transportes',  label: 'Corridas',   icon: Car,      roles: ['motorista'], modulo: 'mod_transporte' },
   { href: '/pets',         label: 'Pets',       icon: Dog,      roles: ['admin', 'recepcao', 'banho_tosa'] },
   { href: '/tutores',    label: 'Tutores',    icon: Users,         roles: ['admin', 'recepcao'] },
-  { href: '/financeiro', label: 'Financeiro', icon: DollarSign,    roles: ['admin', 'recepcao'] },
+  { href: '/financeiro', label: 'Financeiro', icon: DollarSign,    roles: ['admin', 'recepcao'], modulo: 'mod_financeiro' },
 ]
 
 // ── Menu "Mais" ─────────────────────────────────────────────
@@ -38,6 +41,7 @@ interface MoreItem {
   roles: UserRole[]
   iconColor: string
   iconBg: string
+  modulo?: ModuloCampo
 }
 
 const moreItems: MoreItem[] = [
@@ -67,15 +71,18 @@ const moreItems: MoreItem[] = [
     roles: ['admin', 'recepcao', 'motorista'],
     iconColor: 'text-brand-orange',
     iconBg: 'bg-orange-100',
+    modulo: 'mod_transporte',
   },
 ]
 
-export default function BottomNav({ role }: { role: UserRole }) {
+export default function BottomNav({ role, empresa }: { role: UserRole; empresa?: Empresa | null }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
 
-  const visibleQuick = quickItems.filter(i => i.roles.includes(role))
-  const visibleMore  = moreItems.filter(i => i.roles.includes(role))
+  // mostra o item se o papel permite E (não depende de módulo OU o módulo está ativo)
+  const moduloAtivo = (m?: ModuloCampo) => !m || !empresa || Boolean(empresa[m])
+  const visibleQuick = quickItems.filter(i => i.roles.includes(role) && moduloAtivo(i.modulo))
+  const visibleMore  = moreItems.filter(i => i.roles.includes(role) && moduloAtivo(i.modulo))
 
   return (
     <>

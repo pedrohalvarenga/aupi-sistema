@@ -62,7 +62,7 @@ export default function EditarReceitaPage() {
   }, [id])
 
   const conta = contas.find(c => c.id === contaId)
-  const mostrarTaxa = (forma === 'debito' || forma === 'credito') && conta?.tipo === 'pagbank_pj'
+  const mostrarTaxa = (forma === 'debito' || forma === 'credito') && conta?.tipo === 'maquina_cartao'
   const valorLiquido = mostrarTaxa && typeof taxaCartao === 'number' && taxaCartao > 0
     ? calcValorLiquido(valor, taxaCartao) : null
 

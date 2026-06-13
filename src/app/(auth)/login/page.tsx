@@ -55,9 +55,9 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-10">
           <div className="w-24 h-24 rounded-3xl bg-white shadow-lg flex items-center justify-center mb-4">
-            <Image src="/logo-aulado.svg" alt="Aulado" width={64} height={64} className="rounded-2xl" />
+            <Image src="/logo-aupi.svg" alt="Aupi" width={64} height={64} className="rounded-2xl" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Aulado</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Aupi</h1>
           <p className="text-gray-500 text-sm">Gestão para creches, hotéis e banho & tosa</p>
         </div>
 

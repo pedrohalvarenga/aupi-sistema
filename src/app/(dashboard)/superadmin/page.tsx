@@ -64,7 +64,7 @@ export default function SuperAdminPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-bold text-gray-900">Aulado — Clientes</h1>
+      <h1 className="text-xl font-bold text-gray-900">Aupi — Clientes</h1>
 
       <div className="grid grid-cols-3 gap-3">
         <Card><p className="text-2xl font-bold text-gray-900">{empresas.length}</p><p className="text-xs text-gray-500">Empresas</p></Card>

@@ -36,15 +36,15 @@ Plataforma multi-empresa derivada do sistema Play Dog. Cada cliente (creche, hot
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Settings → API |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Settings → API |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API (secreta!) |
-| `RESEND_API_KEY` | https://resend.com (verifique o domínio useaupi.com.br) |
-| `RESEND_FROM` | `Aupi <noreply@useaupi.com.br>` |
-| `NEXT_PUBLIC_APP_URL` | URL final, ex. `https://app.useaupi.com.br` |
+| `RESEND_API_KEY` | https://resend.com (verifique o domínio aupipet.com.br) |
+| `RESEND_FROM` | `Aupi <noreply@aupipet.com.br>` |
+| `NEXT_PUBLIC_APP_URL` | URL final, ex. `https://app.aupipet.com.br` |
 | `CRON_SECRET` | gere um segredo forte (ex.: `openssl rand -hex 24`) |
 | `ASAAS_WEBHOOK_TOKEN` | gere outro segredo forte |
 | `GOOGLE_MAPS_API_KEY` | opcional, para rotas de transporte |
 
 3. Os 5 crons já estão configurados em `vercel.json` e rodam para **todas** as empresas automaticamente.
-4. Aponte o domínio `app.useaupi.com.br` para o projeto Vercel.
+4. Aponte o domínio `app.aupipet.com.br` para o projeto Vercel.
 
 ## 3. Criar o seu usuário super-admin (Aupi)
 
@@ -64,13 +64,13 @@ WHERE email = 'seu@email.com';
 1. Crie a conta no Asaas e cadastre cada cliente como **assinatura recorrente** (R$ 97+/mês conforme o plano).
 2. Copie o `customer id` do Asaas (cus_xxxx) para a coluna `asaas_customer_id` da empresa (via SQL ou Supabase Table Editor).
 3. No Asaas → Integrações → Webhooks:
-   - URL: `https://app.useaupi.com.br/api/asaas/webhook`
+   - URL: `https://app.aupipet.com.br/api/asaas/webhook`
    - Token de autenticação: o mesmo valor de `ASAAS_WEBHOOK_TOKEN`
 4. A partir daí é automático: pagamento confirmado → conta `ativo`; atraso → `inadimplente`; assinatura cancelada → `cancelado`. Trial vencido ou conta suspensa = tela de bloqueio com botão de WhatsApp.
 
 ## 5. Como funciona para o cliente
 
-- **Cadastro:** `https://app.useaupi.com.br/comecar` → cria a empresa + admin em 1 minuto, trial de 14 dias sem cartão.
+- **Cadastro:** `https://app.aupipet.com.br/comecar` → cria a empresa + admin em 1 minuto, trial de 14 dias sem cartão.
 - **White label:** menu Admin → **Minha empresa** → envia logo, escolhe as 2 cores, preenche contatos. Todo o app e os e-mails (extrato, vacinas, relatório do hotel) saem com a marca dele.
 - **Tutores:** cada empresa tem um link próprio de cadastro público: `/cadastro?e=slug-da-empresa` (exibido na tela Minha empresa).
 - **Equipe:** o admin cria usuários (recepção, banho & tosa, motorista) e todos ficam restritos à empresa dele — garantido pelo banco, não só pela interface.
@@ -81,7 +81,7 @@ A migration já cria a empresa **Play Dog** (slug `playdog`, status `ativo`, pla
 
 ## Fora do v1 (próximas fases)
 
-- Subdomínio por cliente (`cliente.aupi.com.br`) e domínio próprio
+- Subdomínio por cliente (`cliente.aupipet.com.br`) e domínio próprio
 - Checkout self-service do Asaas dentro do app (hoje a assinatura é criada por você no painel Asaas)
 - Limites por plano (nº de pets/usuários por faixa de preço)
 

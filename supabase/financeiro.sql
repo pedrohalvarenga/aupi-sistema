@@ -9,17 +9,18 @@
 CREATE TABLE IF NOT EXISTS public.contas_financeiras (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   nome          TEXT NOT NULL,
-  tipo          TEXT NOT NULL CHECK (tipo IN ('pagbank_pj', 'c6_pf', 'dinheiro')),
+  tipo          TEXT NOT NULL CHECK (tipo IN ('banco', 'maquina_cartao', 'dinheiro')),
   saldo_inicial NUMERIC(12,2) NOT NULL DEFAULT 0,
   ativo         BOOLEAN NOT NULL DEFAULT true,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Seed: 3 contas principais
+-- Seed: contas genéricas e zeradas (cada empresa edita as suas)
 INSERT INTO public.contas_financeiras (nome, tipo, saldo_inicial) VALUES
-  ('PagBank PJ',     'pagbank_pj', 0),
-  ('C6 PF Wallace',  'c6_pf',      0),
-  ('Dinheiro (Caixa)', 'dinheiro', 0)
+  ('Conta Bancária 01', 'banco',          0),
+  ('Conta Bancária 02', 'banco',          0),
+  ('Máquina de Cartão', 'maquina_cartao', 0),
+  ('Dinheiro (Caixa)',  'dinheiro',       0)
 ON CONFLICT DO NOTHING;
 
 -- ============================================================

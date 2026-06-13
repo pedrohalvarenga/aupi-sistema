@@ -13,7 +13,7 @@ export type FormaPagamento = 'pix' | 'dinheiro' | 'debito' | 'credito'
 
 export type StatusFinanceiro = 'pago' | 'pendente' | 'cancelado'
 
-export type TipoConta = 'pagbank_pj' | 'c6_pf' | 'dinheiro'
+export type TipoConta = 'banco' | 'maquina_cartao' | 'dinheiro'
 
 export interface ContaFinanceira {
   id: string

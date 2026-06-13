@@ -1,5 +1,5 @@
 ﻿-- ============================================================
--- PLAY DOG â€” MÃ³dulo Banho & Tosa + Transportes
+-- PLAY DOG — Módulo Banho & Tosa + Transportes
 -- Execute este script no Supabase SQL Editor
 -- ============================================================
 
@@ -37,7 +37,7 @@ CREATE INDEX IF NOT EXISTS idx_agendamentos_bt_status ON public.agendamentos_ban
 
 -- ============================================================
 -- TABELA: transportes
--- GenÃ©rica â€” suporta banho_tosa agora; hotel e creche no futuro.
+-- Genérica — suporta banho_tosa agora; hotel e creche no futuro.
 -- origem_id aponta para o registro de origem (agendamento, hospedagem, etc.)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.transportes (
@@ -60,7 +60,7 @@ CREATE INDEX IF NOT EXISTS idx_transportes_status  ON public.transportes(status)
 CREATE INDEX IF NOT EXISTS idx_transportes_origem  ON public.transportes(origem_id);
 
 -- ============================================================
--- TRIGGER: mantÃ©m updated_at atualizado
+-- TRIGGER: mantém updated_at atualizado
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$

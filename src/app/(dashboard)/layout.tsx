@@ -20,7 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!profile || !profile.ativo) redirect('/login')
 
-  // Super admin (Aulado) opera no painel próprio, sem tenant
+  // Super admin (Aupi) opera no painel próprio, sem tenant
   if (profile.role === 'super_admin') {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -45,11 +45,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
               : 'Identificamos uma pendência na assinatura. Regularize o pagamento para reativar o acesso.'}
           </p>
           <a
-            href="mailto:oi@aulado.com.br"
-            className="inline-block w-full py-3 rounded-xl font-semibold text-white"
+            href="/assinar"
+            className="inline-block w-full py-3 rounded-xl font-semibold text-white mb-2"
             style={{ background: 'var(--brand-purple)' }}
           >
-            Falar com a Aulado
+            Assinar agora
+          </a>
+          <a
+            href="mailto:oi@aupipet.com.br"
+            className="inline-block w-full py-2 rounded-xl font-semibold text-gray-500 text-sm"
+          >
+            Falar com a Aupi
           </a>
         </div>
       </div>
@@ -63,7 +69,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <main className="pt-14 pb-24 max-w-lg mx-auto px-4">
           {children}
         </main>
-        <BottomNav role={profile.role} />
+        <BottomNav role={profile.role} empresa={empresa} />
       </div>
     </EmpresaProvider>
   )
