@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
+import { slugify, APP_HOST } from '@/lib/dominio'
+import { Globe } from 'lucide-react'
 
 const SEGMENTOS = [
   { valor: 'creche', label: 'Creche' },
@@ -43,10 +45,15 @@ export default function OnboardingPage() {
       return
     }
 
-    // Login automático e direto para o painel
+    // Login automático e segue para o wizard de personalização da marca
     const supabase = createClient()
-    await supabase.auth.signInWithPassword({ email, password: senha })
-    router.push('/dashboard')
+    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password: senha })
+    if (loginError) {
+      // conta criada, mas login automático falhou: manda para o login com aviso
+      router.push('/login?criada=1')
+      return
+    }
+    router.push('/configurar')
   }
 
   return (
@@ -54,22 +61,36 @@ export default function OnboardingPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
           <div className="w-20 h-20 rounded-3xl bg-white shadow-lg flex items-center justify-center mb-4">
-            <Image src="/logo-aulado.svg" alt="Aulado" width={56} height={56} className="rounded-2xl" />
+            <Image src="/logo-aupi.svg" alt="Aupi" width={56} height={56} className="rounded-2xl" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Crie sua conta</h1>
           <p className="text-gray-500 text-sm text-center">14 dias grátis, sem cartão de crédito</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Input
-            id="nomeEmpresa"
-            label="Nome do seu negócio"
-            type="text"
-            placeholder="Ex.: Creche Patinhas"
-            value={nomeEmpresa}
-            onChange={(e) => setNomeEmpresa(e.target.value)}
-            required
-          />
+          <div className="flex flex-col gap-2">
+            <Input
+              id="nomeEmpresa"
+              label="Nome do seu negócio"
+              type="text"
+              placeholder="Ex.: Creche Patinhas"
+              value={nomeEmpresa}
+              onChange={(e) => setNomeEmpresa(e.target.value)}
+              required
+            />
+            {/* Preview do link próprio (subdomínio) — mostra desde o início */}
+            <div className="rounded-2xl border border-dashed border-brand-purple/40 bg-purple-50/60 px-3 py-2.5">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-brand-purple mb-0.5">
+                <Globe size={13} /> Seu link de acesso será
+              </div>
+              <p className="text-sm font-bold text-gray-800 break-all leading-tight">
+                {nomeEmpresa.trim()
+                  ? <><span className="text-brand-purple">{slugify(nomeEmpresa) || 'sua-empresa'}</span>.{APP_HOST}</>
+                  : <span className="text-gray-400">sua-empresa.{APP_HOST}</span>}
+              </p>
+              <p className="text-[11px] text-gray-400 mt-0.5">É assim que você e seus clientes vão acessar o sistema.</p>
+            </div>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">O que você oferece?</label>

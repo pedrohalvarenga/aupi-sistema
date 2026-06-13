@@ -108,7 +108,13 @@ export default function TutoresPage() {
           {tutores.length === 0 && (
             <div className="text-center py-12 text-gray-400">
               <Users size={48} className="mx-auto mb-3 opacity-30" />
-              <p className="font-medium">Nenhum tutor encontrado</p>
+              <p className="font-medium">{busca.length >= 2 ? 'Nenhum tutor encontrado' : 'Você ainda não cadastrou tutores'}</p>
+              <p className="text-sm text-gray-400 mt-1 mb-4">Cadastre o dono antes (ou junto) do pet.</p>
+              <Link href="/tutores/novo" className="inline-block">
+                <Button>
+                  <Plus size={18} /> Cadastrar primeiro tutor
+                </Button>
+              </Link>
             </div>
           )}
         </div>

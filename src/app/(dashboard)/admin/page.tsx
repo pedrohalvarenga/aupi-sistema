@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
-import { Users, UserPlus, ChevronRight, Link2, Copy, Check } from 'lucide-react'
+import { Users, UserPlus, ChevronRight, Link2, Copy, Check, Headset } from 'lucide-react'
 import { ROLE_LABELS } from '@/lib/utils'
 import type { Profile } from '@/types'
 
@@ -66,6 +66,21 @@ export default function AdminPage() {
         </div>
       </Link>
 
+      <Link href="/admin/suporte" className="block">
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+            <Headset size={22} className="text-brand-orange" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-gray-900">Falar com o Aupipet</p>
+            <p className="text-xs text-gray-400">Suporte com IA na hora ou atendimento humano (até 48h)</p>
+          </div>
+          <span className="text-gray-300">›</span>
+        </div>
+      </Link>
+
+      <DadosExemplo />
+
       <div>
         <div className="flex items-center gap-2 mb-3">
           <Users size={18} className="text-gray-500" />
@@ -96,6 +111,42 @@ export default function AdminPage() {
           ))}
         </div>
       </div>
+    </div>
+  )
+}
+
+function DadosExemplo() {
+  const [carregando, setCarregando] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  async function carregar() {
+    setCarregando(true); setMsg('')
+    try {
+      const res = await fetch('/api/onboarding/dados-exemplo', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) { setMsg(json.error || 'Não foi possível carregar.'); return }
+      setMsg(json.mensagem === 'Dados já existem'
+        ? 'Você já tem dados cadastrados — exemplos não foram adicionados.'
+        : 'Pronto! Pets e tutores de exemplo adicionados. Explore o sistema.')
+    } catch {
+      setMsg('Falha de conexão. Tente novamente.')
+    } finally {
+      setCarregando(false)
+    }
+  }
+
+  return (
+    <div className="bg-white border border-gray-100 rounded-2xl p-4">
+      <p className="font-semibold text-gray-900">Dados de demonstração</p>
+      <p className="text-xs text-gray-400 mb-3">Adicione pets e tutores fictícios para conhecer o sistema. Não use na operação real.</p>
+      <button
+        onClick={carregar}
+        disabled={carregando}
+        className="text-sm font-semibold px-4 py-2 rounded-xl border border-gray-200 text-gray-700 disabled:opacity-50"
+      >
+        {carregando ? 'Carregando...' : 'Carregar dados de exemplo'}
+      </button>
+      {msg && <p className="text-xs text-gray-500 mt-2">{msg}</p>}
     </div>
   )
 }
