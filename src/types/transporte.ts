@@ -5,6 +5,21 @@ export type StatusTransporte = 'pendente' | 'em_rota' | 'concluido' | 'imprevist
 export type OrigemTransporte = 'banho_tosa' | 'hotel' | 'creche'
 export type TrechoTransporte = 'buscar' | 'levar' // buscar = ida (coleta) | levar = volta (entrega)
 
+export interface Veiculo {
+  id: string
+  nome: string
+  placa: string | null
+  modelo: string | null
+  ano: number | null
+  cor: string | null
+  km_atual: number
+  capacidade: number | null
+  ativo: boolean
+  observacoes: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface Rota {
   id: string
   data: string
@@ -19,6 +34,7 @@ export interface Rota {
   iniciada_em: string | null
   finalizada_em: string | null
   motorista_id: string | null
+  veiculo_id: string | null
   criada_por: string | null
   created_at: string
 }
@@ -68,6 +84,7 @@ export interface Abastecimento {
   valor_total: number
   cupom_url: string | null
   motorista_id: string | null
+  veiculo_id: string | null
   despesa_id: string | null
   created_at: string
   motorista?: { nome: string }
@@ -79,6 +96,7 @@ export interface ManutencaoVeiculo {
   descricao: string
   valor: number
   km: number | null
+  veiculo_id: string | null
   despesa_id: string | null
   registrado_por: string | null
   created_at: string

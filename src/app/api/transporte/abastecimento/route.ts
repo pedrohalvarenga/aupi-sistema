@@ -23,6 +23,7 @@ export async function POST(request: Request) {
   const litros = parseFloat(String(formData.get('litros') ?? '').replace(',', '.'))
   const valor = parseFloat(String(formData.get('valor') ?? '').replace(',', '.'))
   const dataParam = String(formData.get('data') ?? '').trim()
+  const veiculoId = String(formData.get('veiculo_id') ?? '').trim() || null
   const arquivo = formData.get('arquivo') as File | null
 
   if (isNaN(km) || km <= 0 || isNaN(litros) || litros <= 0 || isNaN(valor) || valor <= 0) {
@@ -72,10 +73,23 @@ export async function POST(request: Request) {
     valor_total: valor,
     cupom_url: cupomUrl,
     motorista_id: user.id,
+    veiculo_id: veiculoId,
     despesa_id: despesa?.id ?? null,
   })
 
   if (errAb) return NextResponse.json({ error: errAb.message }, { status: 500 })
+
+  // Atualiza o km atual do veículo se o km do painel for maior (escopado à empresa do usuário)
+  if (veiculoId) {
+    const { data: prof } = await supabase.from('profiles').select('empresa_id').eq('id', user.id).single()
+    if (prof?.empresa_id) {
+      await admin.from('veiculos')
+        .update({ km_atual: km, updated_at: new Date().toISOString() })
+        .eq('id', veiculoId)
+        .eq('empresa_id', prof.empresa_id)
+        .lt('km_atual', km)
+    }
+  }
 
   return NextResponse.json({ ok: true })
 }

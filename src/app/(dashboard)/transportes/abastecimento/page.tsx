@@ -1,12 +1,16 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Camera, Check, Fuel, X, Sparkles, Loader2 } from 'lucide-react'
+import { ArrowLeft, Camera, Check, Fuel, X, Sparkles, Loader2, Car } from 'lucide-react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+import type { Veiculo } from '@/types/transporte'
 
 export default function AbastecimentoPage() {
   const router = useRouter()
+  const [veiculos, setVeiculos] = useState<Veiculo[]>([])
+  const [veiculoId, setVeiculoId] = useState('')
   const [km, setKm] = useState('')
   const [litros, setLitros] = useState('')
   const [valor, setValor] = useState('')
@@ -20,6 +24,17 @@ export default function AbastecimentoPage() {
   const [erro, setErro] = useState('')
   const [ok, setOk] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient()
+      const { data } = await supabase.from('veiculos').select('*').eq('ativo', true).order('nome')
+      const lista = (data as Veiculo[]) ?? []
+      setVeiculos(lista)
+      if (lista.length === 1) setVeiculoId(lista[0].id)
+    }
+    load()
+  }, [])
 
   function escolherFoto(f: File | null) {
     setFoto(f)
@@ -55,6 +70,7 @@ export default function AbastecimentoPage() {
     fd.set('litros', litros)
     fd.set('valor', valor)
     fd.set('data', data)
+    if (veiculoId) fd.set('veiculo_id', veiculoId)
     if (foto) fd.set('arquivo', foto)
 
     setSalvando(true)
@@ -136,6 +152,22 @@ export default function AbastecimentoPage() {
         <p className={`text-xs text-center font-medium px-3 py-2 rounded-xl ${msgIA.includes('preenchidos') ? 'text-green-700 bg-green-50' : 'text-gray-500 bg-gray-50'}`}>
           {msgIA}
         </p>
+      )}
+
+      {/* Veículo (se houver cadastro) */}
+      {veiculos.length > 0 && (
+        <div>
+          <label className="text-sm font-bold text-gray-700 mb-1 block flex items-center gap-1.5">
+            <Car size={15} className="text-brand-orange" /> Veículo
+          </label>
+          <select value={veiculoId} onChange={e => setVeiculoId(e.target.value)} className={campoSmCls}>
+            <option value="">Não informar</option>
+            {veiculos.map(v => (
+              <option key={v.id} value={v.id}>{v.nome}{v.placa ? ` · ${v.placa}` : ''}</option>
+            ))}
+          </select>
+          <Link href="/transportes/veiculos/novo" className="text-xs text-brand-orange font-semibold mt-1 inline-block">+ cadastrar veículo</Link>
+        </div>
       )}
 
       {/* Data */}
