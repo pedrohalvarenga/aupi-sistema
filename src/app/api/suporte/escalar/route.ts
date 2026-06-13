@@ -89,14 +89,19 @@ export async function POST(request: Request) {
     // remetente de teste da Resend (onboarding@resend.dev), que funciona SEM
     // domínio verificado. Quando aupipet.com.br for verificado na Resend,
     // basta definir SUPORTE_FROM para enviar com a marca.
-    await resend.emails.send({
+    const { error: sendErr } = await resend.emails.send({
       from: process.env.SUPORTE_FROM || 'Aupipet Suporte <onboarding@resend.dev>',
       to: DESTINO,
       replyTo: contato.includes('@') ? contato : undefined,
       subject: `[Suporte Aupipet] ${empresaNome} — ${assunto}`,
       html,
     })
-  } catch {
+    if (sendErr) {
+      console.error('Resend escalar erro:', sendErr)
+      return NextResponse.json({ error: 'Não foi possível enviar agora. Tente novamente em instantes.' }, { status: 502 })
+    }
+  } catch (e) {
+    console.error('Resend escalar exceção:', e)
     return NextResponse.json({ error: 'Não foi possível enviar agora. Tente novamente em instantes.' }, { status: 502 })
   }
 
