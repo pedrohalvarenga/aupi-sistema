@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { LogIn } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import Card from '@/components/ui/Card'
 
@@ -27,9 +29,11 @@ const STATUS_CORES: Record<string, string> = {
 }
 
 export default function SuperAdminPage() {
+  const router = useRouter()
   const [empresas, setEmpresas] = useState<EmpresaMetrica[]>([])
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState('')
+  const [entrando, setEntrando] = useState('')
 
   async function carregar() {
     const supabase = createClient()
@@ -54,6 +58,29 @@ export default function SuperAdminPage() {
     else {
       const j = await res.json()
       setErro(j.error || 'Erro ao executar ação')
+    }
+  }
+
+  async function entrarNoSistema(empresaId: string) {
+    if (entrando) return
+    setEntrando(empresaId); setErro('')
+    try {
+      const res = await fetch('/api/superadmin/impersonar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ empresaId }),
+      })
+      if (!res.ok) {
+        const j = await res.json()
+        setErro(j.error || 'Não foi possível entrar no sistema do cliente')
+        setEntrando('')
+        return
+      }
+      router.push('/dashboard')
+      router.refresh()
+    } catch {
+      setErro('Falha de conexão')
+      setEntrando('')
     }
   }
 
@@ -88,6 +115,14 @@ export default function SuperAdminPage() {
           <p className="text-xs text-gray-500 mb-3">
             {e.total_pets} pets · {e.total_tutores} tutores · {e.total_usuarios} usuários
           </p>
+          <button
+            onClick={() => entrarNoSistema(e.id)}
+            disabled={!!entrando}
+            className="w-full flex items-center justify-center gap-2 text-sm font-bold px-3 py-2.5 rounded-xl bg-brand-purple text-white mb-2 disabled:opacity-60"
+          >
+            <LogIn size={16} />
+            {entrando === e.id ? 'Entrando...' : 'Entrar no sistema'}
+          </button>
           <div className="flex gap-2 flex-wrap">
             {e.status !== 'suspenso' && e.status !== 'cancelado' && (
               <button onClick={() => executar(e.id, 'suspender')} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-50 text-red-600">

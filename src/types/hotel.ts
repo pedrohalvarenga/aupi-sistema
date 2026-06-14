@@ -15,6 +15,7 @@ export interface Hospedagem {
   extras_descricao?: string
   observacoes?: string
   status: StatusHospedagem
+  status_pagamento?: 'pendente' | 'pago'
   motivo_cancelamento?: string
   receita_id?: string
   registrado_por?: string

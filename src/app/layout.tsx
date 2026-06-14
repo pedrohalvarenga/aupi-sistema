@@ -1,6 +1,7 @@
 ﻿import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import MetaPixel from '@/components/MetaPixel'
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 export const metadata: Metadata = {
   title: 'Aupipet — Gestão Pet',
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <MetaPixel />
         {children}
+        <GoogleAnalytics gaId="G-ZEZ87VEE12" />
       </body>
     </html>
   )

@@ -12,16 +12,25 @@ export async function getEmpresa(): Promise<Empresa | null> {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('empresa_id')
+    .select('role, empresa_id')
     .eq('id', user.id)
     .single()
 
-  if (!profile?.empresa_id) return null
+  // Super admin "entrando como" um cliente: usa a empresa impersonada.
+  // A coluna só é consultada para super_admin (bancos sem ela — ex.: Play Dog —
+  // nunca têm super_admin, então a query extra nem roda).
+  let alvo = profile?.empresa_id ?? null
+  if (profile?.role === 'super_admin') {
+    const { data: imp } = await supabase
+      .from('profiles').select('impersonando_empresa_id').eq('id', user.id).single()
+    if (imp?.impersonando_empresa_id) alvo = imp.impersonando_empresa_id
+  }
+  if (!alvo) return null
 
   const { data: empresa } = await supabase
     .from('empresas')
     .select('*')
-    .eq('id', profile.empresa_id)
+    .eq('id', alvo)
     .single<Empresa>()
 
   return empresa

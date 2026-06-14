@@ -59,14 +59,32 @@ export default function EditarReservaPage({ params }: { params: Promise<{ id: st
 
     setSaving(true)
     const supabase = createClient()
+
+    // Valor total recalculado com base nas novas datas/diária
+    const noites = Math.max(
+      1,
+      Math.ceil(
+        (new Date(checkoutPrevisto).getTime() - new Date(checkinPrevisto).getTime()) /
+          (1000 * 60 * 60 * 24)
+      )
+    )
+    const novoTotal = +(noites * valor + (h?.valor_extras ?? 0)).toFixed(2)
+
     const { error } = await supabase.from('hospedagens').update({
       checkin_previsto: new Date(checkinPrevisto).toISOString(),
       checkout_previsto: new Date(checkoutPrevisto).toISOString(),
       valor_diaria: valor,
       observacoes: observacoes || null,
+      ...(h?.valor_total != null ? { valor_total: novoTotal } : {}),
     }).eq('id', id)
 
     if (error) { setErro(error.message); setSaving(false); return }
+
+    // Se já existe receita vinculada, atualiza o valor no financeiro em tempo real
+    if (h?.receita_id) {
+      await supabase.from('receitas').update({ valor: novoTotal }).eq('id', h.receita_id)
+    }
+
     router.push(`/hotel/reservas/${id}`)
   }
 

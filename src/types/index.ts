@@ -39,6 +39,7 @@ export interface Profile {
   nome: string
   role: UserRole
   empresa_id?: string | null
+  impersonando_empresa_id?: string | null
   ativo: boolean
   permissoes?: Record<string, boolean> | null
   created_at: string

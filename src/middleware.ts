@@ -78,33 +78,35 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Super admin (Aupipet) opera no painel de clientes
-  if (user && pathname === '/dashboard') {
-    const { data: profile } = await supabase
-      .from('profiles').select('role').eq('id', user.id).single()
-    if (profile?.role === 'super_admin') {
-      return NextResponse.redirect(new URL('/superadmin', request.url))
-    }
-  }
-
   // Guard por página: papel + permissões (enforcement server-side do menu)
   const regra = user && !isPublic
     ? GUARD.find(g => pathname === g.prefix || pathname.startsWith(g.prefix + '/'))
     : undefined
   const ehSuperadmin = pathname === '/superadmin' || pathname.startsWith('/superadmin/')
-  if (user && (regra || ehSuperadmin)) {
+  const ehDashboard = pathname === '/dashboard'
+  if (user && (regra || ehSuperadmin || ehDashboard)) {
     const { data: prof } = await supabase
       .from('profiles').select('role, permissoes').eq('id', user.id).single()
     const role = prof?.role as UserRole | undefined
+    // Coluna de impersonação só é lida para super_admin (bancos sem ela nunca têm super_admin).
+    let impersonando = false
     if (role === 'super_admin') {
-      // super_admin só no /superadmin; se cair numa página de tenant, manda pro painel dele
-      if (regra) return NextResponse.redirect(new URL('/superadmin', request.url))
+      const { data: imp } = await supabase
+        .from('profiles').select('impersonando_empresa_id').eq('id', user.id).single()
+      impersonando = !!imp?.impersonando_empresa_id
+    }
+
+    if (role === 'super_admin' && !impersonando) {
+      // super_admin sem impersonar: só no /superadmin; tenant/dashboard → painel dele
+      if (regra || ehDashboard) return NextResponse.redirect(new URL('/superadmin', request.url))
     } else {
+      // Usuário comum, ou super_admin impersonando (age como admin do tenant)
+      const efetivo: UserRole = impersonando ? 'admin' : (role as UserRole)
       if (ehSuperadmin) return NextResponse.redirect(new URL('/dashboard', request.url))
-      if (regra?.soAdmin && role !== 'admin') {
+      if (regra?.soAdmin && efetivo !== 'admin') {
         return NextResponse.redirect(new URL('/dashboard', request.url))
       }
-      if (regra?.area && role && !podeAcessar(regra.area, role, (prof?.permissoes as Permissoes) ?? null)) {
+      if (regra?.area && !podeAcessar(regra.area, efetivo, (prof?.permissoes as Permissoes) ?? null)) {
         return NextResponse.redirect(new URL('/dashboard', request.url))
       }
     }

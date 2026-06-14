@@ -5,6 +5,7 @@ import AvisoVencimento from '@/components/AvisoVencimento'
 import BottomNav from '@/components/layout/BottomNav'
 import TopBar from '@/components/layout/TopBar'
 import EmpresaProvider from '@/components/EmpresaProvider'
+import BannerImpersonacao from '@/components/BannerImpersonacao'
 import type { Profile } from '@/types'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -21,8 +22,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!profile || !profile.ativo) redirect('/login')
 
-  // Super admin (Aupipet) opera no painel próprio, sem tenant
-  if (profile.role === 'super_admin') {
+  const impersonando = profile.role === 'super_admin' && !!profile.impersonando_empresa_id
+
+  // Super admin (Aupipet) sem impersonar: opera no painel próprio, sem tenant
+  if (profile.role === 'super_admin' && !impersonando) {
     return (
       <div className="min-h-screen bg-gray-50">
         <main className="max-w-lg mx-auto px-4 py-6">{children}</main>
@@ -33,7 +36,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const empresa = await getEmpresa()
   if (!empresa) redirect('/login')
 
-  if (acessoBloqueado(empresa)) {
+  // Quando impersonando, o super_admin navega como ADMIN da empresa.
+  const roleEfetivo = impersonando ? 'admin' : profile.role
+
+  // Impersonando, o super_admin acessa mesmo com assinatura vencida/suspensa (suporte).
+  if (!impersonando && acessoBloqueado(empresa)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-sm text-center">
@@ -68,9 +75,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <EmpresaProvider empresa={empresa}>
       <div className="min-h-screen bg-gray-50">
-        <TopBar nome={profile.nome} />
-        <main className="pt-14 pb-24 max-w-lg mx-auto px-4">
-          {(aviso.vencido || aviso.diasAteVencer <= 5) && (
+        {impersonando && <BannerImpersonacao nome={empresa.nome} />}
+        <TopBar nome={impersonando ? `Aupi · ${empresa.nome}` : profile.nome} />
+        <main className={`${impersonando ? 'pt-24' : 'pt-14'} pb-24 max-w-lg mx-auto px-4`}>
+          {!impersonando && (aviso.vencido || aviso.diasAteVencer <= 5) && (
             <AvisoVencimento
               vencido={aviso.vencido}
               diasAteVencer={aviso.diasAteVencer}
@@ -80,7 +88,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           )}
           {children}
         </main>
-        <BottomNav role={profile.role} empresa={empresa} permissoes={profile.permissoes} />
+        <BottomNav role={roleEfetivo} empresa={empresa} permissoes={profile.permissoes} />
       </div>
     </EmpresaProvider>
   )

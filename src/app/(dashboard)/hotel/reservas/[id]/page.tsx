@@ -3,7 +3,7 @@
 import { use, useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, LogIn, LogOut, Edit, X, Check, Moon } from 'lucide-react'
+import { ArrowLeft, LogIn, LogOut, Edit, X, Check, DollarSign } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
@@ -24,7 +24,15 @@ export default function ReservaDetailPage({ params }: { params: Promise<{ id: st
   const [valorExtras, setValorExtras] = useState('')
   const [extrasDesc, setExtrasDesc] = useState('')
   const [formaPag, setFormaPag] = useState('pix')
+  const [statusPagCheckout, setStatusPagCheckout] = useState<'pago' | 'pendente'>('pago')
   const [savingCheckout, setSavingCheckout] = useState(false)
+
+  // Payment modal ("Registrar pagamento")
+  const [showPagamento, setShowPagamento] = useState(false)
+  const [valorPagamento, setValorPagamento] = useState('')
+  const [formaPagPagamento, setFormaPagPagamento] = useState('pix')
+  const [dataPagamento, setDataPagamento] = useState(() => new Date().toISOString().split('T')[0])
+  const [savingPagamento, setSavingPagamento] = useState(false)
 
   // Cancel modal
   const [showCancel, setShowCancel] = useState(false)
@@ -53,6 +61,18 @@ export default function ReservaDetailPage({ params }: { params: Promise<{ id: st
     setValorTotal((noites * h.valor_diaria).toFixed(2).replace('.', ','))
   }, [h, showCheckout])
 
+  // Preenche valor sugerido no modal de pagamento
+  useEffect(() => {
+    if (!h || !showPagamento) return
+    const noites = calcNoites(
+      h.checkin_real ?? h.checkin_previsto,
+      h.checkout_real ?? h.checkout_previsto
+    )
+    const sugerido = h.valor_total ?? noites * h.valor_diaria
+    setValorPagamento(sugerido.toFixed(2).replace('.', ','))
+    setDataPagamento(new Date().toISOString().split('T')[0])
+  }, [h, showPagamento])
+
   async function fazerCheckin() {
     setAgindo(true)
     const supabase = createClient()
@@ -65,39 +85,87 @@ export default function ReservaDetailPage({ params }: { params: Promise<{ id: st
   }
 
   async function confirmarCheckout() {
+    if (!h) return
     setSavingCheckout(true)
     const supabase = createClient()
     const total = parseFloat(valorTotal.replace(',', '.')) || 0
     const extras = parseFloat(valorExtras.replace(',', '.')) || 0
     const valorFinal = total + extras
+    const jaPago = h.status_pagamento === 'pago'
 
     // Registra hospedagem como finalizada
-    await supabase.from('hospedagens').update({
+    const updates: Record<string, unknown> = {
       status: 'finalizada',
       checkout_real: new Date().toISOString(),
       valor_total: valorFinal,
       valor_extras: extras,
       extras_descricao: extrasDesc || null,
-    }).eq('id', id)
+    }
 
-    // Cria receita no financeiro
-    if (valorFinal > 0 && h) {
-      const pet = h.pet as NonNullable<Hospedagem['pet']>
-      await supabase.from('receitas').insert({
+    const pet = h.pet as NonNullable<Hospedagem['pet']>
+    const descricao = `Hotel — ${pet?.nome} (${formatDate(h.checkin_previsto, 'dd/MM')} → ${formatDate(h.checkout_previsto, 'dd/MM')})`
+
+    if (jaPago && h.receita_id) {
+      // Pagamento já registrado: NÃO cria receita duplicada, só atualiza o valor existente
+      if (valorFinal > 0) {
+        await supabase.from('receitas').update({ valor: valorFinal }).eq('id', h.receita_id)
+      }
+      await supabase.from('hospedagens').update(updates).eq('id', id)
+    } else if (valorFinal > 0) {
+      // Pendente: cria receita com o status escolhido (pago agora ou pendente)
+      const { data: recData } = await supabase.from('receitas').insert({
         data: new Date().toISOString().split('T')[0],
         valor: valorFinal,
         area: 'hotel',
         categoria: 'hotel',
         forma_pagamento: formaPag,
-        status: 'pago',
-        descricao: `Hotel — ${pet?.nome} (${formatDate(h.checkin_previsto, 'dd/MM')} → ${formatDate(h.checkout_previsto, 'dd/MM')})`,
+        status: statusPagCheckout,
+        descricao,
         tutor_id: pet?.tutor_id,
         pet_id: pet?.id,
-      })
+      }).select().single()
+
+      if (recData?.id) {
+        updates.receita_id = recData.id
+        if (statusPagCheckout === 'pago') updates.status_pagamento = 'pago'
+      }
+      await supabase.from('hospedagens').update(updates).eq('id', id)
+    } else {
+      await supabase.from('hospedagens').update(updates).eq('id', id)
     }
 
     setSavingCheckout(false)
     setShowCheckout(false)
+    await carregar()
+  }
+
+  async function registrarPagamento() {
+    if (!h) return
+    const valor = parseFloat(valorPagamento.replace(',', '.')) || 0
+    if (valor <= 0) return
+    setSavingPagamento(true)
+    const supabase = createClient()
+    const pet = h.pet as NonNullable<Hospedagem['pet']>
+
+    const { data: recData } = await supabase.from('receitas').insert({
+      data: dataPagamento,
+      valor,
+      area: 'hotel',
+      categoria: 'hotel',
+      forma_pagamento: formaPagPagamento,
+      status: 'pago',
+      descricao: `Hotel — ${pet?.nome} (${formatDate(h.checkin_previsto, 'dd/MM')} → ${formatDate(h.checkout_previsto, 'dd/MM')})`,
+      tutor_id: pet?.tutor_id,
+      pet_id: pet?.id,
+    }).select().single()
+
+    await supabase.from('hospedagens').update({
+      status_pagamento: 'pago',
+      ...(recData?.id ? { receita_id: recData.id } : {}),
+    }).eq('id', id)
+
+    setSavingPagamento(false)
+    setShowPagamento(false)
     await carregar()
   }
 
@@ -139,18 +207,29 @@ export default function ReservaDetailPage({ params }: { params: Promise<{ id: st
         <div className="flex-1">
           <h1 className="text-xl font-bold text-gray-900">Reserva</h1>
         </div>
-        {h.status !== 'finalizada' && h.status !== 'cancelada' && (
+        {h.status !== 'cancelada' && (
           <Link href={`/hotel/reservas/${id}/editar`} className="p-2 rounded-xl text-gray-400">
             <Edit size={20} />
           </Link>
         )}
       </div>
 
-      {/* Status badge */}
-      <div className="flex">
+      {/* Status badges */}
+      <div className="flex flex-wrap gap-2">
         <span className={`px-3 py-1 rounded-full text-sm font-bold ${STATUS_HOTEL_CORES[h.status]}`}>
           {STATUS_HOTEL_LABELS[h.status]}
         </span>
+        {h.status !== 'cancelada' && (
+          h.status_pagamento === 'pago' ? (
+            <span className="px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700">
+              ✓ Pago
+            </span>
+          ) : (
+            <span className="px-3 py-1 rounded-full text-sm font-bold bg-amber-100 text-amber-700">
+              ⏳ Pendente
+            </span>
+          )
+        )}
       </div>
 
       {/* Pet info */}
@@ -219,6 +298,34 @@ export default function ReservaDetailPage({ params }: { params: Promise<{ id: st
         )}
       </Card>
 
+      {/* Pagamento */}
+      {h.status !== 'cancelada' && (
+        <Card>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-400 mb-1">Pagamento</p>
+              {h.status_pagamento === 'pago' ? (
+                <p className="font-bold text-green-600 flex items-center gap-1">
+                  <Check size={16} /> Pago — {formatCurrencyHotel(h.valor_total ?? valorEstimado)}
+                </p>
+              ) : (
+                <p className="font-bold text-amber-600">
+                  Pendente — {formatCurrencyHotel(h.valor_total ?? valorEstimado)}
+                </p>
+              )}
+            </div>
+            {h.status_pagamento !== 'pago' && (
+              <button
+                onClick={() => setShowPagamento(true)}
+                className="px-4 py-2 rounded-2xl bg-green-500 text-white font-bold text-sm flex items-center gap-2 active:bg-green-600"
+              >
+                <DollarSign size={16} /> Receber
+              </button>
+            )}
+          </div>
+        </Card>
+      )}
+
       {/* Observações */}
       {h.observacoes && (
         <Card>
@@ -273,6 +380,16 @@ export default function ReservaDetailPage({ params }: { params: Promise<{ id: st
         </div>
       )}
 
+      {/* Editar (datas, horários e valor) — visível em reservada, hospedado e finalizada */}
+      {h.status !== 'cancelada' && (
+        <Link
+          href={`/hotel/reservas/${id}/editar`}
+          className="w-full py-3 rounded-2xl border-2 border-brand-purple/30 text-brand-purple font-semibold text-sm flex items-center justify-center gap-2 active:bg-purple-50"
+        >
+          <Edit size={18} /> Editar datas, horários e valor
+        </Link>
+      )}
+
       {/* Modal Checkout */}
       {showCheckout && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
@@ -321,21 +438,57 @@ export default function ReservaDetailPage({ params }: { params: Promise<{ id: st
               </div>
             )}
 
-            <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
-                Forma de pagamento
-              </label>
-              <select
-                value={formaPag}
-                onChange={e => setFormaPag(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-brand-purple outline-none text-sm bg-white"
-              >
-                <option value="pix">PIX</option>
-                <option value="dinheiro">Dinheiro</option>
-                <option value="debito">Débito</option>
-                <option value="credito">Crédito</option>
-              </select>
-            </div>
+            {h.status_pagamento === 'pago' ? (
+              <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                <p className="text-sm font-semibold text-green-700 flex items-center gap-2">
+                  <Check size={18} /> Pagamento já registrado
+                </p>
+                <p className="text-xs text-green-600 mt-1">
+                  O caixa não será afetado novamente. O valor da receita será atualizado para o total final.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
+                    Forma de pagamento
+                  </label>
+                  <select
+                    value={formaPag}
+                    onChange={e => setFormaPag(e.target.value)}
+                    className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-brand-purple outline-none text-sm bg-white"
+                  >
+                    <option value="pix">PIX</option>
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="debito">Débito</option>
+                    <option value="credito">Crédito</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
+                    Status do pagamento
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['pago', 'pendente'] as const).map(s => (
+                      <button
+                        key={s}
+                        onClick={() => setStatusPagCheckout(s)}
+                        className={`py-3 rounded-2xl font-semibold text-sm border-2 transition-colors ${
+                          statusPagCheckout === s
+                            ? s === 'pago'
+                              ? 'border-green-500 bg-green-50 text-green-700'
+                              : 'border-amber-400 bg-amber-50 text-amber-700'
+                            : 'border-gray-200 text-gray-500'
+                        }`}
+                      >
+                        {s === 'pago' ? 'Pago agora' : 'Pendente'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="bg-purple-50 rounded-2xl p-4 text-center">
               <p className="text-xs text-gray-500">Total a cobrar</p>
@@ -355,6 +508,83 @@ export default function ReservaDetailPage({ params }: { params: Promise<{ id: st
                 Cancelar
               </button>
               <Button variant="primary" loading={savingCheckout} onClick={confirmarCheckout}>
+                <Check size={18} /> Confirmar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Registrar pagamento */}
+      {showPagamento && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
+          <div className="bg-white rounded-t-3xl w-full max-w-lg mx-auto p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold text-gray-900">Registrar pagamento</h2>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
+                Valor (R$)
+              </label>
+              <input
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                value={valorPagamento}
+                onChange={e => setValorPagamento(e.target.value)}
+                placeholder="0,00"
+                className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-brand-purple outline-none text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
+                Forma de pagamento
+              </label>
+              <select
+                value={formaPagPagamento}
+                onChange={e => setFormaPagPagamento(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-brand-purple outline-none text-sm bg-white"
+              >
+                <option value="pix">PIX</option>
+                <option value="dinheiro">Dinheiro</option>
+                <option value="debito">Débito</option>
+                <option value="credito">Crédito</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
+                Data do recebimento
+              </label>
+              <input
+                type="date"
+                value={dataPagamento}
+                onChange={e => setDataPagamento(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-brand-purple outline-none text-sm bg-white"
+              />
+            </div>
+
+            <div className="bg-green-50 rounded-2xl p-4 text-center">
+              <p className="text-xs text-gray-500">Receita a registrar (paga)</p>
+              <p className="text-2xl font-bold text-green-600">
+                {formatCurrencyHotel(parseFloat(valorPagamento.replace(',', '.')) || 0)}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setShowPagamento(false)}
+                className="py-3 rounded-2xl border-2 border-gray-200 text-gray-600 font-semibold"
+              >
+                Cancelar
+              </button>
+              <Button
+                variant="primary"
+                loading={savingPagamento}
+                onClick={registrarPagamento}
+                className="bg-green-500 hover:bg-green-600"
+              >
                 <Check size={18} /> Confirmar
               </Button>
             </div>

@@ -73,7 +73,7 @@ export default function AdminPage() {
           </div>
           <div>
             <p className="font-bold">Importar dados com IA</p>
-            <p className="text-sm opacity-90">Traga tutores e pets de planilha, PDF ou foto</p>
+            <p className="text-sm opacity-90">Tutores, pets, equipe, fornecedores e financeiro — de planilha, PDF ou foto</p>
           </div>
         </div>
       </Link>

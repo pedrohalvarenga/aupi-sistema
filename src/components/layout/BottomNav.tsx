@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   CalendarCheck, Building2, Scissors, Dog, Users, DollarSign,
-  Home, Settings, Car, Menu, X, Truck,
+  Home, Settings, Car, Menu, X, Truck, UserCheck,
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -75,6 +75,15 @@ const moreItems: MoreItem[] = [
     iconColor: 'text-brand-orange',
     iconBg: 'bg-orange-100',
     modulo: 'mod_transporte',
+  },
+  {
+    href: '/funcionarios',
+    label: 'Funcionários',
+    sublabel: 'Equipe, cargos e comissões',
+    icon: UserCheck,
+    roles: ['admin'],
+    iconColor: 'text-green-600',
+    iconBg: 'bg-green-100',
   },
   {
     href: '/fornecedores',
