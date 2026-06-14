@@ -6,6 +6,7 @@ import { ArrowLeft, Search, X } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
+import { parseMoeda } from '@/lib/utils'
 import type { Pet } from '@/types'
 
 type PetComTutor = Pet & { tutor: { nome: string } }
@@ -70,8 +71,8 @@ export default function NovaReservaPage() {
       setErro('Check-out deve ser depois do check-in.')
       return
     }
-    const valor = parseFloat(valorDiaria.replace(',', '.'))
-    if (isNaN(valor) || valor < 0) { setErro('Valor da diária inválido.'); return }
+    const valor = parseMoeda(valorDiaria)
+    if (valor == null || valor < 0) { setErro('Valor da diária inválido.'); return }
 
     setSaving(true)
     const supabase = createClient()

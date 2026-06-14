@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { parseMoeda } from '@/lib/utils'
 
 export default function NovoTutorPage() {
   const router = useRouter()
@@ -30,7 +31,7 @@ export default function NovoTutorPage() {
       cpf: cpf || null,
       endereco: endereco || null,
       observacoes: observacoes || null,
-      preco_personalizado: precoPersonalizado ? parseFloat(precoPersonalizado.replace(',', '.')) : null,
+      preco_personalizado: parseMoeda(precoPersonalizado),
     })
     if (error) { setLoading(false); alert('Erro ao salvar'); return }
     router.push('/tutores')

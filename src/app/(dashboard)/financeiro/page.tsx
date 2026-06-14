@@ -222,6 +222,19 @@ export default async function FinanceiroPage() {
         </div>
       )}
 
+      {/* Tela vazia — empresa nova sem lançamentos */}
+      {(ultimasReceitas ?? []).length === 0 && (
+        <div className="text-center py-10 text-gray-400">
+          <Wallet size={44} className="mx-auto mb-3 opacity-30" />
+          <p className="font-medium text-gray-500">Nenhum lançamento ainda</p>
+          <p className="text-sm mt-1 mb-4">Registre sua primeira receita ou despesa para acompanhar o caixa.</p>
+          <div className="flex items-center justify-center gap-2">
+            <Link href="/financeiro/receitas/nova" className="inline-flex items-center px-4 py-2.5 rounded-2xl bg-green-600 text-white font-semibold text-sm">+ Receita</Link>
+            <Link href="/financeiro/despesas/nova" className="inline-flex items-center px-4 py-2.5 rounded-2xl bg-red-500 text-white font-semibold text-sm">+ Despesa</Link>
+          </div>
+        </div>
+      )}
+
       {/* Últimas receitas */}
       {(ultimasReceitas ?? []).length > 0 && (
         <div>

@@ -244,7 +244,11 @@ export default function CrechePage() {
           {checklistFiltrado.length === 0 && presentesFiltrados.length === 0 && !loading && (
             <div className="text-center py-12 text-gray-400">
               <Dog size={48} className="mx-auto mb-3 opacity-30" />
-              <p className="font-medium">Nenhum pet encontrado</p>
+              <p className="font-medium">Nenhum pet na chamada de hoje</p>
+              <p className="text-sm text-gray-400 mt-1 mb-4">Cadastre um pet para começar a registrar presenças.</p>
+              <a href="/pets/novo" className="inline-flex items-center gap-1.5 px-5 py-3 rounded-2xl bg-brand-purple text-white font-semibold text-sm">
+                + Cadastrar pet
+              </a>
             </div>
           )}
         </>

@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
 import { CONTA_TIPO_LABELS } from '@/lib/financeiro'
+import { parseMoeda } from '@/lib/utils'
 import type { TipoConta } from '@/types/financeiro'
 import { Wallet, CreditCard, Banknote, Trash2, Plus, Pencil } from 'lucide-react'
 
@@ -59,7 +60,7 @@ export default function ContasPage() {
       const payload = {
         nome: form.nome.trim(),
         tipo: form.tipo,
-        saldo_inicial: Number(String(form.saldo_inicial).replace(',', '.')) || 0,
+        saldo_inicial: parseMoeda(form.saldo_inicial) ?? 0,
       }
       const { error } = editandoId
         ? await supabase.from('contas_financeiras').update(payload).eq('id', editandoId)

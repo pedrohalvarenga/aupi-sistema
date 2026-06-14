@@ -57,6 +57,20 @@ export function vacinaStatus(dataUltimaDose: string | null | undefined): 'ok' | 
   return 'ok'
 }
 
+/**
+ * Converte texto em número aceitando formato brasileiro.
+ * "1.200,50" -> 1200.5 · "50,00" -> 50 · "120.50" -> 120.5 · "" -> null
+ */
+export function parseMoeda(v: string | number | null | undefined): number | null {
+  if (v == null || v === '') return null
+  if (typeof v === 'number') return isNaN(v) ? null : v
+  let s = String(v).trim().replace(/[^\d.,-]/g, '')
+  if (!s) return null
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.') // BR: ponto = milhar, vírgula = decimal
+  const n = parseFloat(s)
+  return isNaN(n) ? null : n
+}
+
 export function whatsappUrl(telefone: string): string {
   const numero = telefone.replace(/\D/g, '')
   const com55 = numero.startsWith('55') ? numero : `55${numero}`

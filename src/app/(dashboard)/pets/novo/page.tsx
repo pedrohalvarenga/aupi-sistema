@@ -16,6 +16,7 @@ export default function NovoPetPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
+  const [erro, setErro] = useState('')
   const [tutores, setTutores] = useState<Tutor[]>([])
   const [criandoTutor, setCriandoTutor] = useState(false)
   const vacinaRef = useRef<HTMLInputElement>(null)
@@ -83,6 +84,7 @@ export default function NovoPetPage() {
 
   async function salvar(e: React.FormEvent) {
     e.preventDefault()
+    setErro('')
     setLoading(true)
     const supabase = createClient()
 
@@ -94,7 +96,7 @@ export default function NovoPetPage() {
         .insert({ nome: nomeTutor, telefone })
         .select()
         .single()
-      if (error) { setLoading(false); alert('Erro ao criar tutor'); return }
+      if (error) { setLoading(false); setErro('Não foi possível criar o tutor: ' + error.message); return }
       idTutor = novoTutor.id
     }
 
@@ -110,7 +112,7 @@ export default function NovoPetPage() {
       } else {
         const err = await res.json().catch(() => ({ error: 'Erro desconhecido' }))
         setLoading(false)
-        alert(`Erro ao enviar foto: ${err.error}`)
+        setErro(`Não foi possível enviar a foto: ${err.error}`)
         return
       }
     }
@@ -135,7 +137,7 @@ export default function NovoPetPage() {
       ativo: true,
     })
 
-    if (error) { setLoading(false); alert('Erro ao salvar pet'); return }
+    if (error) { setLoading(false); setErro('Não foi possível salvar o pet: ' + error.message); return }
     router.push('/pets')
   }
 
@@ -339,6 +341,12 @@ export default function NovoPetPage() {
           <VacinaInput label="Gripe — última dose" value={vacinaGripe} onChange={setVacinaGripe} />
           <VacinaInput label="Giardia — última dose" value={vacinaGiardia} onChange={setVacinaGiardia} />
         </section>
+
+        {erro && (
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-2xl text-sm">
+            {erro}
+          </div>
+        )}
 
         <Button type="submit" size="lg" loading={loading}>
           Salvar Pet

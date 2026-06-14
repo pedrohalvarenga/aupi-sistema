@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { extrairCoresDoArquivo } from '@/lib/cores'
+import { hostEmpresa } from '@/lib/dominio'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import type { Empresa } from '@/types'
@@ -191,6 +192,13 @@ export default function ConfigurarWizardPage() {
               <h1 className="text-2xl font-bold text-gray-900">Tudo pronto!</h1>
               <p className="text-gray-500 text-sm">O sistema já está com a identidade da {empresa.nome}. Você pode mudar tudo depois em “Minha empresa”.</p>
             </div>
+            {empresa.slug && (
+              <div className="w-full rounded-2xl border border-dashed border-brand-purple/40 bg-purple-50/60 px-4 py-3">
+                <p className="text-[11px] font-semibold text-brand-purple mb-0.5">Seu endereço de acesso</p>
+                <p className="text-sm font-bold text-gray-800 break-all">{hostEmpresa(empresa.slug)}</p>
+                <p className="text-[11px] text-gray-400 mt-0.5">Salve este link — é por aqui que você e sua equipe entram.</p>
+              </div>
+            )}
             {erro && <p className="text-sm text-red-500">{erro}</p>}
             <div className="flex gap-3 w-full">
               <Button variant="ghost" className="flex-1" onClick={() => setPasso(2)}>Voltar</Button>
