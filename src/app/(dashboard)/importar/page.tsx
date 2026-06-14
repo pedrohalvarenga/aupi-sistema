@@ -200,7 +200,7 @@ export default function ImportarPage() {
       <div className="bg-purple-50 border border-brand-purple/20 rounded-3xl p-4 flex gap-3">
         <Sparkles size={20} className="text-brand-purple flex-shrink-0 mt-0.5" />
         <p className="text-sm text-gray-600">
-          Envie <b>planilhas (Excel/CSV)</b>, <b>PDFs</b> ou <b>fotos das suas fichas</b>. A inteligência da Aupi lê,
+          Envie <b>planilhas (Excel/CSV)</b>, <b>PDFs</b> ou <b>fotos das suas fichas</b>. A inteligência da Aupipet lê,
           organiza e prepara o cadastro de tutores, pets e portes. Você só revisa e confirma.
         </p>
       </div>

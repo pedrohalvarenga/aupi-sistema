@@ -47,7 +47,7 @@ function clarear(hex: string, fator: number): string {
 /**
  * Lê o logo e devolve a cor primária (tom dominante mais vibrante) e uma
  * secundária. Para logos preto-e-branco/monocromáticos, deriva um tom
- * neutro do próprio logo (nunca impõe a cor da Aupi nesse caso).
+ * neutro do próprio logo (nunca impõe a cor da Aupipet nesse caso).
  * Devolve `null` se a imagem não puder ser lida — o chamador deve manter
  * as cores atuais nesse caso.
  */

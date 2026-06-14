@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
- * Webhook do Asaas — cobrança recorrente da plataforma Aupi.
+ * Webhook do Asaas — cobrança recorrente da plataforma Aupipet.
  *
  * Configurar no painel do Asaas:
  *   URL: https://SEU-DOMINIO/api/asaas/webhook

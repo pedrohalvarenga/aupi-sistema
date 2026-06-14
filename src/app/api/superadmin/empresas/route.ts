@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 export async function POST(request: Request) {
-  // Só o super_admin (Aupi) pode operar aqui
+  // Só o super_admin (Aupipet) pode operar aqui
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })

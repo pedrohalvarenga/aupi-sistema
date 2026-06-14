@@ -1,4 +1,4 @@
-// Cliente mínimo da API Asaas (cobrança recorrente da plataforma Aupi).
+// Cliente mínimo da API Asaas (cobrança recorrente da plataforma Aupipet).
 // Sandbox: https://api-sandbox.asaas.com/v3 · Produção: https://api.asaas.com/v3
 
 const BASE = (process.env.ASAAS_BASE_URL || 'https://api-sandbox.asaas.com/v3').trim()

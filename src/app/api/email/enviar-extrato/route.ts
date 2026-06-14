@@ -73,7 +73,7 @@ export async function POST(request: Request) {
 
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error: emailError } = await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Aupi <noreply@aupipet.com.br>',
+    from: process.env.RESEND_FROM ?? 'Aupipet <noreply@aupipet.com.br>',
     to: [tutor.email],
     subject: `Extrato ${emp.nome} — ${MESES[mes]}/${ano}`,
     html,

@@ -161,7 +161,7 @@ export default function AssinarPage() {
               destaque={p.destaque} onClick={() => { setPlano(p.id); setEtapa('dados') }} />
           ))}
         </div>
-        <p className="text-xs text-gray-400 text-center mt-6">Pagamento seguro processado pela Aupi.</p>
+        <p className="text-xs text-gray-400 text-center mt-6">Pagamento seguro processado pela Aupipet.</p>
       </Shell>
     )
   }

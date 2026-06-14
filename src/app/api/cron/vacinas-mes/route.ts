@@ -122,7 +122,7 @@ export async function GET(request: Request) {
 </html>`
 
     const { error: emailError } = await resend.emails.send({
-      from: process.env.RESEND_FROM ?? 'Aupi <noreply@aupipet.com.br>',
+      from: process.env.RESEND_FROM ?? 'Aupipet <noreply@aupipet.com.br>',
       to: empresa.email_contato!,
       subject: `🐾 Vacinas do mês — ${mesAno} | ${empresa.nome}`,
       html,

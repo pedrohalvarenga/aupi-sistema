@@ -2,13 +2,13 @@
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Aupi — Gestão Pet',
+  title: 'Aupipet — Gestão Pet',
   description: 'Plataforma de gestão para creches, hotéis e banho & tosa',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Aupi',
+    title: 'Aupipet',
   },
 }
 

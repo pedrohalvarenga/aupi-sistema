@@ -68,7 +68,7 @@ export default function OnboardingPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
           <div className="w-20 h-20 rounded-3xl bg-white shadow-lg flex items-center justify-center mb-4">
-            <Image src="/logo-aupi.svg" alt="Aupi" width={56} height={56} className="rounded-2xl" />
+            <Image src="/logo-aupi.svg" alt="Aupipet" width={56} height={56} className="rounded-2xl" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Crie sua conta</h1>
           <p className="text-gray-500 text-sm text-center">14 dias grátis, sem cartão de crédito</p>

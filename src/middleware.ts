@@ -76,7 +76,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Super admin (Aupi) opera no painel de clientes
+  // Super admin (Aupipet) opera no painel de clientes
   if (user && pathname === '/dashboard') {
     const { data: profile } = await supabase
       .from('profiles').select('role').eq('id', user.id).single()

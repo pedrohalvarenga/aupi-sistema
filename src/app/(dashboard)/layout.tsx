@@ -21,7 +21,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!profile || !profile.ativo) redirect('/login')
 
-  // Super admin (Aupi) opera no painel próprio, sem tenant
+  // Super admin (Aupipet) opera no painel próprio, sem tenant
   if (profile.role === 'super_admin') {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -56,7 +56,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             href="mailto:oi@aupipet.com.br"
             className="inline-block w-full py-2 rounded-xl font-semibold text-gray-500 text-sm"
           >
-            Falar com a Aupi
+            Falar com a Aupipet
           </a>
         </div>
       </div>

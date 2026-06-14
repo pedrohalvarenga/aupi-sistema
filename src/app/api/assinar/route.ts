@@ -5,7 +5,7 @@ import { getPlanoInfo } from '@/lib/planos'
 import { asaasPost, asaasGet, asaasConfigurado } from '@/lib/asaas'
 
 /**
- * Checkout TRANSPARENTE do Asaas — o cliente paga 100% dentro do Aupi,
+ * Checkout TRANSPARENTE do Asaas — o cliente paga 100% dentro do Aupipet,
  * sem nunca ver a página do Asaas nem os dados do dono da plataforma.
  *
  *  - Cartão : tokeniza e cobra na hora (creditCard + creditCardHolderInfo + remoteIp).
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       value: info.precoCentavos / 100,
       nextDueDate: hoje,
       cycle: 'MONTHLY',
-      description: `Aupi — Plano ${info.nome}`,
+      description: `Aupipet — Plano ${info.nome}`,
       externalReference: empresa.id,
     }
 
@@ -157,7 +157,7 @@ export async function POST(request: Request) {
     const pay = cobr?.data?.[0]
     if (!pay?.id) return NextResponse.json({ error: 'Cobrança não gerada pelo Asaas' }, { status: 502 })
 
-    // 4. Resposta conforme o método — tudo renderizado dentro do Aupi.
+    // 4. Resposta conforme o método — tudo renderizado dentro do Aupipet.
     if (billingType === 'CREDIT_CARD') {
       const st = String(pay.status || '').toUpperCase()
       const aprovado = st === 'CONFIRMED' || st === 'RECEIVED' || st === 'RECEIVED_IN_CASH'
