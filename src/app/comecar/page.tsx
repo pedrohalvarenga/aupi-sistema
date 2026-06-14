@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -26,6 +26,13 @@ export default function OnboardingPage() {
   const [whatsapp, setWhatsapp] = useState('')
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
+
+  // Pré-seleciona o segmento se veio do formulário do site (?segmento=)
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get('segmento')
+    const mapa: Record<string, string> = { creche: 'creche', hotel: 'hotel', 'banho-tosa': 'banho_tosa', banho_tosa: 'banho_tosa', todos: 'completo', completo: 'completo' }
+    if (p && mapa[p]) setSegmento(mapa[p])
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

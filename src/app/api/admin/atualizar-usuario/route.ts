@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // Admin edita um usuário: nome, perfil, ativo e (opcional) nova senha.
 export async function POST(request: Request) {
@@ -9,8 +9,8 @@ export async function POST(request: Request) {
 
   if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'admin') {
+  const { data: profile } = await supabase.from('profiles').select('role, empresa_id').eq('id', user.id).single()
+  if (profile?.role !== 'admin' || !profile.empresa_id) {
     return NextResponse.json({ error: 'Sem permissão' }, { status: 403 })
   }
 
@@ -26,16 +26,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Você não pode remover seu próprio acesso de administrador.' }, { status: 400 })
   }
 
-  const adminClient = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  )
+  const adminClient = createAdminClient()
+
+  // ISOLAMENTO: o usuário-alvo precisa ser da MESMA empresa do admin.
+  const { data: alvo } = await adminClient.from('profiles').select('empresa_id').eq('id', id).single()
+  if (!alvo || alvo.empresa_id !== profile.empresa_id) {
+    return NextResponse.json({ error: 'Usuário não encontrado.' }, { status: 404 })
+  }
 
   const { error: errProfile } = await adminClient.from('profiles')
     .update({ nome: nome.trim(), role, ativo: ativo !== false, permissoes: permissoesFinal })
     .eq('id', id)
-  if (errProfile) return NextResponse.json({ error: errProfile.message }, { status: 400 })
+    .eq('empresa_id', profile.empresa_id)
+  if (errProfile) {
+    console.error('atualizar-usuario profile:', errProfile)
+    return NextResponse.json({ error: 'Não foi possível salvar as alterações.' }, { status: 400 })
+  }
 
   const authUpdates: Record<string, unknown> = {
     user_metadata: { nome: nome.trim(), role },
@@ -44,7 +50,10 @@ export async function POST(request: Request) {
     authUpdates.password = senha
   }
   const { error: errAuth } = await adminClient.auth.admin.updateUserById(id, authUpdates)
-  if (errAuth) return NextResponse.json({ error: errAuth.message }, { status: 400 })
+  if (errAuth) {
+    console.error('atualizar-usuario auth:', errAuth)
+    return NextResponse.json({ error: 'Não foi possível atualizar o acesso.' }, { status: 400 })
+  }
 
   return NextResponse.json({ ok: true })
 }

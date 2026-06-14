@@ -1,6 +1,22 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { slugDoHost } from '@/lib/dominio'
+import { podeAcessar, type AreaKey, type Permissoes } from '@/lib/permissoes'
+import type { UserRole } from '@/types'
+
+// Páginas protegidas: por área (permissões) e/ou só admin.
+const GUARD: { prefix: string; area?: AreaKey; soAdmin?: boolean }[] = [
+  { prefix: '/admin', soAdmin: true },
+  { prefix: '/empresa', soAdmin: true },
+  { prefix: '/creche', area: 'creche' },
+  { prefix: '/hotel', area: 'hotel' },
+  { prefix: '/banho-tosa', area: 'banho_tosa' },
+  { prefix: '/transportes', area: 'transporte' },
+  { prefix: '/pets', area: 'pets' },
+  { prefix: '/tutores', area: 'tutores' },
+  { prefix: '/financeiro', area: 'financeiro' },
+  { prefix: '/importar', area: 'importar' },
+]
 
 export async function middleware(request: NextRequest) {
   // Subdomínio da empresa (ex.: patinhas.app.aupipet.com.br -> "patinhas").
@@ -66,6 +82,29 @@ export async function middleware(request: NextRequest) {
       .from('profiles').select('role').eq('id', user.id).single()
     if (profile?.role === 'super_admin') {
       return NextResponse.redirect(new URL('/superadmin', request.url))
+    }
+  }
+
+  // Guard por página: papel + permissões (enforcement server-side do menu)
+  const regra = user && !isPublic
+    ? GUARD.find(g => pathname === g.prefix || pathname.startsWith(g.prefix + '/'))
+    : undefined
+  const ehSuperadmin = pathname === '/superadmin' || pathname.startsWith('/superadmin/')
+  if (user && (regra || ehSuperadmin)) {
+    const { data: prof } = await supabase
+      .from('profiles').select('role, permissoes').eq('id', user.id).single()
+    const role = prof?.role as UserRole | undefined
+    if (role === 'super_admin') {
+      // super_admin só no /superadmin; se cair numa página de tenant, manda pro painel dele
+      if (regra) return NextResponse.redirect(new URL('/superadmin', request.url))
+    } else {
+      if (ehSuperadmin) return NextResponse.redirect(new URL('/dashboard', request.url))
+      if (regra?.soAdmin && role !== 'admin') {
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+      }
+      if (regra?.area && role && !podeAcessar(regra.area, role, (prof?.permissoes as Permissoes) ?? null)) {
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+      }
     }
   }
 

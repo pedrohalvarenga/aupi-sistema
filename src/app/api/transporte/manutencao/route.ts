@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // Registro simples de manutenção do veículo (recepção/admin) com
 // despesa automática na área transporte, categoria manutenção.
@@ -11,10 +11,11 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
 
   const { data: profile } = await supabase
-    .from('profiles').select('role, ativo').eq('id', user.id).single()
-  if (!profile?.ativo || !['admin', 'recepcao'].includes(profile.role)) {
+    .from('profiles').select('role, ativo, empresa_id').eq('id', user.id).single()
+  if (!profile?.ativo || !profile.empresa_id || !['admin', 'recepcao'].includes(profile.role)) {
     return NextResponse.json({ error: 'Sem permissão.' }, { status: 403 })
   }
+  const empresaId = profile.empresa_id as string
 
   const { data, descricao, valor, km } = await request.json()
   const v = parseFloat(String(valor ?? '').replace(',', '.'))
@@ -23,13 +24,10 @@ export async function POST(request: Request) {
   }
   const kmNum = km != null && String(km).trim() !== '' ? parseFloat(String(km).replace(',', '.')) : null
 
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  )
+  const admin = createAdminClient()
 
   const { data: despesa, error: errDesp } = await admin.from('despesas').insert({
+    empresa_id: empresaId,
     data,
     valor: v,
     area: 'transporte',
@@ -40,9 +38,10 @@ export async function POST(request: Request) {
     registrado_por: user.id,
   }).select('id').single()
 
-  if (errDesp) return NextResponse.json({ error: errDesp.message }, { status: 500 })
+  if (errDesp) { console.error('manutencao despesa:', errDesp); return NextResponse.json({ error: 'Não foi possível lançar a despesa.' }, { status: 500 }) }
 
   const { error: errMan } = await admin.from('manutencoes_veiculo').insert({
+    empresa_id: empresaId,
     data,
     descricao: descricao.trim(),
     valor: v,
@@ -51,7 +50,7 @@ export async function POST(request: Request) {
     registrado_por: user.id,
   })
 
-  if (errMan) return NextResponse.json({ error: errMan.message }, { status: 500 })
+  if (errMan) { console.error('manutencao:', errMan); return NextResponse.json({ error: 'Não foi possível registrar a manutenção.' }, { status: 500 }) }
 
   return NextResponse.json({ ok: true })
 }

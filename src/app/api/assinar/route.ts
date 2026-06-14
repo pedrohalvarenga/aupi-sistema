@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getPlanoInfo } from '@/lib/planos'
 import { asaasPost, asaasGet, asaasConfigurado } from '@/lib/asaas'
 
@@ -77,11 +77,7 @@ export async function POST(request: Request) {
     .from('empresas').select('id, nome, asaas_customer_id, email_contato').eq('id', profile.empresa_id).single()
   if (!empresa) return NextResponse.json({ error: 'Empresa não encontrada' }, { status: 404 })
 
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  )
+  const admin = createAdminClient()
 
   try {
     // 1. Cliente no Asaas — sempre garante CPF/CNPJ e dados atualizados.
@@ -149,10 +145,12 @@ export async function POST(request: Request) {
     }
 
     const sub = await asaasPost('/subscriptions', subBody)
-    await admin
-      .from('empresas')
-      .update({ asaas_subscription_id: sub.id, plano: info.id, forma_pagamento: metodo })
-      .eq('id', empresa.id)
+    // 'teste' não é um plano real — não sobrescreve o plano da empresa (e evita
+    // violar o CHECK da coluna, o que abortaria o update inteiro silenciosamente).
+    const updSub: Record<string, unknown> = { asaas_subscription_id: sub.id, forma_pagamento: metodo }
+    if (info.id !== 'teste') updSub.plano = info.id
+    const { error: subErr } = await admin.from('empresas').update(updSub).eq('id', empresa.id)
+    if (subErr) console.error('[assinar] falha ao salvar assinatura:', subErr.message)
 
     // 3. Recupera a 1ª cobrança gerada pela assinatura.
     const cobr = await asaasGet(`/subscriptions/${sub.id}/payments`)

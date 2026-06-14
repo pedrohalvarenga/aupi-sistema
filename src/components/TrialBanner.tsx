@@ -10,7 +10,7 @@ interface Props {
 export default function TrialBanner({ trialAte, status }: Props) {
   if (status !== 'trial') return null
 
-  const dias = Math.ceil(
+  const dias = Math.floor(
     (new Date(trialAte + 'T23:59:59').getTime() - Date.now()) / 86400000
   )
 

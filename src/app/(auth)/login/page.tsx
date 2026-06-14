@@ -96,9 +96,12 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="text-center text-xs text-gray-400 mt-8">
-          Acesso restrito a funcionários.<br />
-          Fale com o administrador para obter acesso.
+        <p className="text-center text-sm text-gray-500 mt-8">
+          Ainda não tem conta?{' '}
+          <a href="/comecar" className="font-semibold text-brand-purple">Criar grátis</a>
+        </p>
+        <p className="text-center text-xs text-gray-400 mt-2">
+          Funcionário? Peça o acesso ao administrador da sua empresa.
         </p>
       </div>
     </div>

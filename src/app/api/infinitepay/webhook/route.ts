@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
  * Webhook da InfinitePay (Checkout). Chamado quando um pagamento é confirmado.
@@ -7,6 +7,16 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
  * Deve responder 200 {"success": true} em menos de 1 segundo.
  */
 export async function POST(request: Request) {
+  // Autenticação fail-closed: o checkout ativo é o Asaas; esta rota (InfinitePay)
+  // é legado. Só processa se INFINITEPAY_WEBHOOK_TOKEN estiver configurado E o
+  // token vier correto na URL (?token=) ou no header. Impede forjar pagamento.
+  const token = process.env.INFINITEPAY_WEBHOOK_TOKEN
+  const recebido = new URL(request.url).searchParams.get('token')
+    || request.headers.get('x-webhook-token')
+  if (!token || recebido !== token) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
+
   let body: Record<string, unknown> = {}
   try { body = await request.json() } catch { /* ignora corpo inválido */ }
 
@@ -25,11 +35,7 @@ export async function POST(request: Request) {
 
   if (!orderNsu) return NextResponse.json({ success: true }) // nada a fazer
 
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  )
+  const admin = createAdminClient()
 
   const { data: cobranca } = await admin
     .from('assinaturas_cobrancas')

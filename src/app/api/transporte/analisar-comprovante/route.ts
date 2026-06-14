@@ -1,16 +1,28 @@
 import { NextResponse } from 'next/server'
-import { anthropic as client } from '@/lib/anthropic'
+import { anthropic as client, temAnthropic } from '@/lib/anthropic'
+import { createClient } from '@/lib/supabase/server'
+
+const MAX_BYTES = 8 * 1024 * 1024 // 8 MB
 
 export async function POST(request: Request) {
+  // Exige usuário autenticado (rota usada no painel) — evita gasto de IA por terceiros.
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
+  if (!temAnthropic) return NextResponse.json({ error: 'Leitura por IA indisponível no momento.' }, { status: 503 })
+
   const formData = await request.formData()
   const file = formData.get('arquivo') as File | null
   if (!file) return NextResponse.json({ error: 'Nenhum arquivo enviado' }, { status: 400 })
+  if (file.size > MAX_BYTES) return NextResponse.json({ error: 'Imagem muito grande (máx. 8 MB).' }, { status: 413 })
 
   const bytes = await file.arrayBuffer()
   const base64 = Buffer.from(bytes).toString('base64')
   const mediaType = (file.type || 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif'
 
-  const msg = await client.messages.create({
+  let msg
+  try {
+    msg = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 512,
     messages: [
@@ -45,7 +57,11 @@ Regras:
         ],
       },
     ],
-  })
+    })
+  } catch (e) {
+    console.error('analisar-comprovante:', e)
+    return NextResponse.json({ error: 'Não foi possível ler o comprovante agora.' }, { status: 502 })
+  }
 
   const texto = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
 

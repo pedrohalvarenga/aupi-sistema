@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // Registra abastecimento: foto do cupom no storage + despesa automática
 // (area transporte, categoria combustível) + linha em abastecimentos.
@@ -13,10 +13,11 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
 
   const { data: profile } = await supabase
-    .from('profiles').select('role, ativo, nome').eq('id', user.id).single()
-  if (!profile?.ativo || !['admin', 'recepcao', 'motorista'].includes(profile.role)) {
+    .from('profiles').select('role, ativo, nome, empresa_id').eq('id', user.id).single()
+  if (!profile?.ativo || !profile.empresa_id || !['admin', 'recepcao', 'motorista'].includes(profile.role)) {
     return NextResponse.json({ error: 'Sem permissão.' }, { status: 403 })
   }
+  const empresaId = profile.empresa_id as string
 
   const formData = await request.formData()
   const km = parseFloat(String(formData.get('km') ?? '').replace(',', '.'))
@@ -30,11 +31,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Preencha km, litros e valor.' }, { status: 400 })
   }
 
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  )
+  const admin = createAdminClient()
 
   // Foto do cupom (opcional)
   let cupomUrl: string | null = null
@@ -54,6 +51,7 @@ export async function POST(request: Request) {
   const hoje = new Date().toISOString().split('T')[0]
   const dataAbastecimento = dataParam || hoje
   const { data: despesa, error: errDesp } = await admin.from('despesas').insert({
+    empresa_id: empresaId,
     data: dataAbastecimento,
     valor,
     area: 'transporte',
@@ -64,9 +62,10 @@ export async function POST(request: Request) {
     registrado_por: user.id,
   }).select('id').single()
 
-  if (errDesp) return NextResponse.json({ error: errDesp.message }, { status: 500 })
+  if (errDesp) { console.error('abastecimento despesa:', errDesp); return NextResponse.json({ error: 'Não foi possível lançar a despesa.' }, { status: 500 }) }
 
   const { error: errAb } = await admin.from('abastecimentos').insert({
+    empresa_id: empresaId,
     data: dataAbastecimento,
     km_painel: km,
     litros,
@@ -77,18 +76,15 @@ export async function POST(request: Request) {
     despesa_id: despesa?.id ?? null,
   })
 
-  if (errAb) return NextResponse.json({ error: errAb.message }, { status: 500 })
+  if (errAb) { console.error('abastecimento:', errAb); return NextResponse.json({ error: 'Não foi possível registrar o abastecimento.' }, { status: 500 }) }
 
-  // Atualiza o km atual do veículo se o km do painel for maior (escopado à empresa do usuário)
+  // Atualiza o km atual do veículo se o km do painel for maior (escopado à empresa)
   if (veiculoId) {
-    const { data: prof } = await supabase.from('profiles').select('empresa_id').eq('id', user.id).single()
-    if (prof?.empresa_id) {
-      await admin.from('veiculos')
-        .update({ km_atual: km, updated_at: new Date().toISOString() })
-        .eq('id', veiculoId)
-        .eq('empresa_id', prof.empresa_id)
-        .lt('km_atual', km)
-    }
+    await admin.from('veiculos')
+      .update({ km_atual: km, updated_at: new Date().toISOString() })
+      .eq('id', veiculoId)
+      .eq('empresa_id', empresaId)
+      .lt('km_atual', km)
   }
 
   return NextResponse.json({ ok: true })
