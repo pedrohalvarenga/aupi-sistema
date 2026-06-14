@@ -52,6 +52,9 @@ export default function OnboardingPage() {
       return
     }
 
+    // Conversão para o Meta Pixel (otimiza a campanha por quem realmente se cadastra)
+    fbTrack('CompleteRegistration')
+
     // Login automático e segue para o wizard de personalização da marca
     const supabase = createClient()
     const { error: loginError } = await supabase.auth.signInWithPassword({ email, password: senha })

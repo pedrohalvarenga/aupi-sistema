@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
-import { Users, UserPlus, ChevronRight, Link2, Copy, Check, Headset, UploadCloud } from 'lucide-react'
+import { Users, UserPlus, ChevronRight, Link2, Copy, Check, Headset, UploadCloud, Briefcase } from 'lucide-react'
 import { ROLE_LABELS } from '@/lib/utils'
 import type { Profile } from '@/types'
 
@@ -75,6 +75,19 @@ export default function AdminPage() {
             <p className="font-bold">Importar dados com IA</p>
             <p className="text-sm opacity-90">Traga tutores e pets de planilha, PDF ou foto</p>
           </div>
+        </div>
+      </Link>
+
+      <Link href="/funcionarios" className="block">
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+            <Briefcase size={22} className="text-brand-purple" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-gray-900">Funcionários & Comissões</p>
+            <p className="text-xs text-gray-400">Equipe, salários, uniformes e comissões por área</p>
+          </div>
+          <span className="text-gray-300">›</span>
         </div>
       </Link>
 

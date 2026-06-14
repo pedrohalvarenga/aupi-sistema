@@ -36,6 +36,8 @@ export default function NovaReceitaPage() {
   const [pets, setPets] = useState<{ id: string; nome: string }[]>([])
   const [petId, setPetId] = useState('')
   const [numDiarias, setNumDiarias] = useState<number | ''>('')
+  const [funcionarios, setFuncionarios] = useState<{ id: string; nome_completo: string }[]>([])
+  const [funcionarioId, setFuncionarioId] = useState('')
   const [erro, setErro] = useState('')
 
   const CATEGORIAS_CRECHE: string[] = ['diaria_avulsa', 'pacote_semanal', 'pacote_mensal']
@@ -50,6 +52,14 @@ export default function NovaReceitaPage() {
           setContaId(data[0]?.id ?? '')
         }
       })
+  }, [])
+
+  // Carrega funcionários ativos para atribuir "executado por" (comissão).
+  // Pode falhar silenciosamente para não-admin (RLS) — campo fica vazio.
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.from('funcionarios').select('id, nome_completo').eq('ativo', true).order('nome_completo')
+      .then(({ data }) => { if (data) setFuncionarios(data as { id: string; nome_completo: string }[]) })
   }, [])
 
   // Atualiza taxa padrão quando muda forma e conta
@@ -109,6 +119,7 @@ export default function NovaReceitaPage() {
       valor_liquido: valorLiquido,
       tutor_id: tutorId || null,
       pet_id: petId || null,
+      funcionario_id: funcionarioId || null,
       descricao: descricao || null,
       num_diarias: mostrarDiarias && numDiarias !== '' ? numDiarias : null,
       status,
@@ -322,6 +333,21 @@ export default function NovaReceitaPage() {
           </div>
         )}
       </div>
+
+      {/* Executado por (funcionário) — para comissão */}
+      {funcionarios.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-semibold text-gray-700">Executado por (opcional)</label>
+          <select value={funcionarioId} onChange={e => setFuncionarioId(e.target.value)}
+            className="w-full py-3 px-4 rounded-2xl border-2 border-gray-200 focus:border-brand-purple outline-none text-base bg-white">
+            <option value="">Ninguém / não atribuir</option>
+            {funcionarios.map(f => (
+              <option key={f.id} value={f.id}>{f.nome_completo}</option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-400">Quem realizou o serviço — usado para calcular a comissão.</p>
+        </div>
+      )}
 
       {/* Descrição */}
       <div className="flex flex-col gap-1">

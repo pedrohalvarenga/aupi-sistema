@@ -1,5 +1,6 @@
 ﻿import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import MetaPixel from '@/components/MetaPixel'
 
 export const metadata: Metadata = {
   title: 'Aupipet — Gestão Pet',
@@ -22,7 +23,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        <MetaPixel />
+        {children}
+      </body>
     </html>
   )
 }

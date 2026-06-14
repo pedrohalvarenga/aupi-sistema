@@ -8,6 +8,7 @@ import type { UserRole } from '@/types'
 const GUARD: { prefix: string; area?: AreaKey; soAdmin?: boolean }[] = [
   { prefix: '/admin', soAdmin: true },
   { prefix: '/empresa', soAdmin: true },
+  { prefix: '/funcionarios', soAdmin: true },
   { prefix: '/creche', area: 'creche' },
   { prefix: '/hotel', area: 'hotel' },
   { prefix: '/banho-tosa', area: 'banho_tosa' },
