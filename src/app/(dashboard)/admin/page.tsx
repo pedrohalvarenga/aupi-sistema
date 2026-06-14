@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
-import { Users, UserPlus, ChevronRight, Link2, Copy, Check, Headset } from 'lucide-react'
+import { Users, UserPlus, ChevronRight, Link2, Copy, Check, Headset, UploadCloud } from 'lucide-react'
 import { ROLE_LABELS } from '@/lib/utils'
 import type { Profile } from '@/types'
 
@@ -66,14 +66,26 @@ export default function AdminPage() {
         </div>
       </Link>
 
+      <Link href="/importar" className="block">
+        <div className="flex items-center gap-4 bg-brand-orange rounded-3xl p-4 text-white">
+          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
+            <UploadCloud size={24} />
+          </div>
+          <div>
+            <p className="font-bold">Importar dados com IA</p>
+            <p className="text-sm opacity-90">Traga tutores e pets de planilha, PDF ou foto</p>
+          </div>
+        </div>
+      </Link>
+
       <Link href="/admin/suporte" className="block">
         <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-orange-100 flex items-center justify-center flex-shrink-0">
             <Headset size={22} className="text-brand-orange" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-gray-900">Falar com o Aupipet</p>
-            <p className="text-xs text-gray-400">Suporte com IA na hora ou atendimento humano (até 48h)</p>
+            <p className="font-semibold text-gray-900">Assistente Aupipet</p>
+            <p className="text-xs text-gray-400">Tire qualquer dúvida do sistema com a IA, na hora · 24/7</p>
           </div>
           <span className="text-gray-300">›</span>
         </div>

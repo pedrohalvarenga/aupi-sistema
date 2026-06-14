@@ -9,6 +9,8 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import type { UserRole } from '@/types'
 import { ROLE_LABELS } from '@/lib/utils'
+import PermissoesEditor from '@/components/admin/PermissoesEditor'
+import { permissoesPadrao, type Permissoes } from '@/lib/permissoes'
 
 const roles: UserRole[] = ['admin', 'recepcao', 'banho_tosa', 'motorista']
 
@@ -19,7 +21,13 @@ export default function NovoUsuarioPage() {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [role, setRole] = useState<UserRole>('recepcao')
+  const [permissoes, setPermissoes] = useState<Permissoes>(() => permissoesPadrao('recepcao'))
   const [erro, setErro] = useState('')
+
+  function trocarRole(r: UserRole) {
+    setRole(r)
+    setPermissoes(permissoesPadrao(r)) // ao trocar de perfil, volta ao padrão dele
+  }
 
   async function criar(e: React.FormEvent) {
     e.preventDefault()
@@ -29,7 +37,7 @@ export default function NovoUsuarioPage() {
     const res = await fetch('/api/admin/criar-usuario', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome, email, senha, role }),
+      body: JSON.stringify({ nome, email, senha, role, permissoes }),
     })
 
     const json = await res.json()
@@ -64,13 +72,18 @@ export default function NovoUsuarioPage() {
                 <button
                   key={r}
                   type="button"
-                  onClick={() => setRole(r)}
+                  onClick={() => trocarRole(r)}
                   className={`py-3 rounded-2xl text-sm font-semibold transition-all ${role === r ? 'bg-brand-purple text-white' : 'bg-gray-100 text-gray-500'}`}
                 >
                   {ROLE_LABELS[r]}
                 </button>
               ))}
             </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold text-gray-700 block mb-2">Áreas que o usuário acessa</label>
+            <PermissoesEditor role={role} value={permissoes} onChange={setPermissoes} />
           </div>
         </div>
 

@@ -34,7 +34,11 @@ export const PLANOS: PlanoInfo[] = [
   { id: 'escala',       nome: 'Escala',       precoCentavos: 69700, descricao: 'Multi-unidades, tudo ilimitado' },
 ]
 
+// Plano oculto só para testar o fluxo de pagamento/webhook (acesso via ?teste=1)
+export const PLANO_TESTE: PlanoInfo = { id: 'teste', nome: 'Teste', precoCentavos: 500, descricao: 'Pagamento de teste — R$5 (mínimo do Asaas)' }
+
 export function getPlanoInfo(id: string): PlanoInfo | undefined {
+  if (id === 'teste') return PLANO_TESTE
   return PLANOS.find(p => p.id === id)
 }
 

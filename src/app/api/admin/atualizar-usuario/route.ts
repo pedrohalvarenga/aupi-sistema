@@ -14,10 +14,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Sem permissão' }, { status: 403 })
   }
 
-  const { id, nome, role, ativo, senha } = await request.json()
+  const { id, nome, role, ativo, senha, permissoes } = await request.json()
   if (!id || !nome?.trim() || !['admin', 'recepcao', 'banho_tosa', 'motorista'].includes(role)) {
     return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
   }
+  // Admin = acesso total (null); demais guardam o mapa de áreas escolhido.
+  const permissoesFinal = role === 'admin' ? null : (permissoes ?? null)
 
   // Trava de segurança: admin não pode rebaixar ou desativar a si mesmo
   if (id === user.id && (role !== 'admin' || ativo === false)) {
@@ -31,7 +33,7 @@ export async function POST(request: Request) {
   )
 
   const { error: errProfile } = await adminClient.from('profiles')
-    .update({ nome: nome.trim(), role, ativo: ativo !== false })
+    .update({ nome: nome.trim(), role, ativo: ativo !== false, permissoes: permissoesFinal })
     .eq('id', id)
   if (errProfile) return NextResponse.json({ error: errProfile.message }, { status: 400 })
 

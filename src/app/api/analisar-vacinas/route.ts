@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+import { anthropic as client } from '@/lib/anthropic'
 
 export async function POST(request: Request) {
   const formData = await request.formData()

@@ -31,7 +31,9 @@ export async function POST(request: Request) {
     }
   }
 
-  const { nome, email, senha, role } = await request.json()
+  const { nome, email, senha, role, permissoes } = await request.json()
+  // Admin tem acesso total (permissoes = null); demais papéis guardam o mapa de áreas.
+  const permissoesFinal = role === 'admin' ? null : (permissoes ?? null)
 
   const adminClient = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -55,6 +57,7 @@ export async function POST(request: Request) {
     role,
     empresa_id: profile.empresa_id,
     ativo: true,
+    permissoes: permissoesFinal,
   })
 
   return NextResponse.json({ ok: true })

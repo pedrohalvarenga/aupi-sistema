@@ -1,6 +1,7 @@
 ﻿import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getEmpresa, acessoBloqueado } from '@/lib/empresa'
+import { getEmpresa, acessoBloqueado, statusAssinatura } from '@/lib/empresa'
+import AvisoVencimento from '@/components/AvisoVencimento'
 import BottomNav from '@/components/layout/BottomNav'
 import TopBar from '@/components/layout/TopBar'
 import EmpresaProvider from '@/components/EmpresaProvider'
@@ -62,14 +63,24 @@ export default async function DashboardLayout({ children }: { children: React.Re
     )
   }
 
+  const aviso = statusAssinatura(empresa)
+
   return (
     <EmpresaProvider empresa={empresa}>
       <div className="min-h-screen bg-gray-50">
         <TopBar nome={profile.nome} />
         <main className="pt-14 pb-24 max-w-lg mx-auto px-4">
+          {(aviso.vencido || aviso.diasAteVencer <= 5) && (
+            <AvisoVencimento
+              vencido={aviso.vencido}
+              diasAteVencer={aviso.diasAteVencer}
+              diasAteBloqueio={aviso.diasAteBloqueio}
+              isAdmin={profile.role === 'admin'}
+            />
+          )}
           {children}
         </main>
-        <BottomNav role={profile.role} empresa={empresa} />
+        <BottomNav role={profile.role} empresa={empresa} permissoes={profile.permissoes} />
       </div>
     </EmpresaProvider>
   )

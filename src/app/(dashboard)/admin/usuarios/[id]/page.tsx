@@ -7,6 +7,8 @@ import { ArrowLeft, Check, KeyRound } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { ROLE_LABELS } from '@/lib/utils'
 import type { Profile, UserRole } from '@/types'
+import PermissoesEditor from '@/components/admin/PermissoesEditor'
+import { permissoesPadrao, type Permissoes } from '@/lib/permissoes'
 
 const ROLES: UserRole[] = ['admin', 'recepcao', 'banho_tosa', 'motorista']
 
@@ -18,6 +20,7 @@ export default function EditarUsuarioPage() {
   const [loading, setLoading] = useState(true)
   const [nome, setNome] = useState('')
   const [role, setRole] = useState<UserRole>('recepcao')
+  const [permissoes, setPermissoes] = useState<Permissoes>(() => permissoesPadrao('recepcao'))
   const [ativo, setAtivo] = useState(true)
   const [senha, setSenha] = useState('')
   const [salvando, setSalvando] = useState(false)
@@ -36,9 +39,15 @@ export default function EditarUsuarioPage() {
     setUsuario(data)
     setNome(data.nome)
     setRole(data.role)
+    setPermissoes((data.permissoes as Permissoes) ?? permissoesPadrao(data.role))
     setAtivo(data.ativo)
     setLoading(false)
   }, [id, router])
+
+  function trocarRole(r: UserRole) {
+    setRole(r)
+    setPermissoes(permissoesPadrao(r))
+  }
 
   useEffect(() => { carregar() }, [carregar])
 
@@ -51,7 +60,7 @@ export default function EditarUsuarioPage() {
     const res = await fetch('/api/admin/atualizar-usuario', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, nome, role, ativo, senha: senha || undefined }),
+      body: JSON.stringify({ id, nome, role, ativo, permissoes, senha: senha || undefined }),
     })
     const json = await res.json()
     setSalvando(false)
@@ -113,7 +122,7 @@ export default function EditarUsuarioPage() {
         <label className={labelCls}>Perfil de acesso *</label>
         <div className="grid grid-cols-2 gap-2">
           {ROLES.map(r => (
-            <button key={r} onClick={() => setRole(r)}
+            <button key={r} onClick={() => trocarRole(r)}
               className={`py-3 rounded-2xl text-sm font-semibold border-2 transition-colors ${
                 role === r ? 'border-brand-purple bg-purple-50 text-brand-purple' : 'border-gray-200 text-gray-500'
               }`}>
@@ -126,6 +135,11 @@ export default function EditarUsuarioPage() {
             Motorista vê só o transporte: rotas, nome, foto, endereço e telefone dos pets e tutores.
           </p>
         )}
+      </div>
+
+      <div>
+        <label className={labelCls}>Áreas que o usuário acessa</label>
+        <PermissoesEditor role={role} value={permissoes} onChange={setPermissoes} />
       </div>
 
       {/* Ativo / inativo */}

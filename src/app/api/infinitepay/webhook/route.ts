@@ -15,6 +15,14 @@ export async function POST(request: Request) {
   const pago = Number(body.paid_amount ?? body.amount ?? 0)
   const receiptUrl = body.receipt_url ? String(body.receipt_url) : null
 
+  // forma de pagamento (define a carência de bloqueio)
+  const capture = String(body.capture_method ?? '').toLowerCase()
+  const formaPagamento = capture.includes('credit') || capture.includes('card') || capture.includes('cart')
+    ? 'cartao'
+    : capture.includes('boleto') ? 'boleto'
+    : capture.includes('pix') ? 'pix'
+    : null
+
   if (!orderNsu) return NextResponse.json({ success: true }) // nada a fazer
 
   const admin = createAdminClient(
@@ -39,12 +47,13 @@ export async function POST(request: Request) {
     .update({ status: 'paga', receipt_url: receiptUrl, paid_at: new Date().toISOString() })
     .eq('id', cobranca.id)
 
-  // Ativa a empresa por 30 dias e aplica o plano pago
+  // Ativa a empresa por 30 dias e aplica o plano + forma de pagamento
   const ate = new Date(); ate.setDate(ate.getDate() + 30)
   await admin.from('empresas').update({
     status: 'ativo',
     plano: cobranca.plano,
     trial_ate: ate.toISOString().split('T')[0],
+    ...(formaPagamento ? { forma_pagamento: formaPagamento } : {}),
     updated_at: new Date().toISOString(),
   }).eq('id', cobranca.empresa_id)
 

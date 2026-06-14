@@ -6,8 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
 
 /**
- * Página de retorno após o checkout da InfinitePay. O webhook ativa a conta
- * em segundos; aqui aguardamos a confirmação e mandamos o usuário ao painel.
+ * Página de retorno após o pagamento. O webhook ativa a conta em segundos;
+ * aqui aguardamos a confirmação e mandamos o usuário ao painel.
  */
 export default function SucessoPage() {
   const router = useRouter()
@@ -47,7 +47,7 @@ export default function SucessoPage() {
         ) : (
           <>
             <h1 className="text-2xl font-bold text-gray-900">Confirmando seu pagamento...</h1>
-            <p className="text-gray-500 text-sm mb-4">Assim que a InfinitePay confirmar, sua conta é liberada automaticamente. Isso leva alguns segundos.</p>
+            <p className="text-gray-500 text-sm mb-4">Assim que o pagamento for confirmado, sua conta é liberada automaticamente. Isso leva alguns segundos.</p>
             <Button onClick={() => { router.push('/dashboard'); router.refresh() }} variant="ghost">Ir para o sistema</Button>
           </>
         )}

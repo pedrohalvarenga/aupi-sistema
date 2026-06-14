@@ -21,6 +21,7 @@ export interface Empresa {
   plano: 'essencial' | 'profissional' | 'escala' | 'completo'
   status: 'trial' | 'ativo' | 'inadimplente' | 'suspenso' | 'cancelado'
   trial_ate: string
+  forma_pagamento?: 'cartao' | 'pix' | 'boleto' | null
   created_at: string
 }
 
@@ -39,6 +40,7 @@ export interface Profile {
   role: UserRole
   empresa_id?: string | null
   ativo: boolean
+  permissoes?: Record<string, boolean> | null
   created_at: string
 }
 
