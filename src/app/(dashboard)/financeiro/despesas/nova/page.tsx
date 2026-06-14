@@ -12,6 +12,8 @@ import {
 } from '@/lib/financeiro'
 import type { ContaFinanceira, AreaNegocio, CategoriaDespesa } from '@/types/financeiro'
 
+type TipoFavorecido = 'fornecedor' | 'funcionario' | 'outro'
+
 const CATEGORIAS_DESPESA: CategoriaDespesa[] = [
   'racao_petiscos','limpeza','produtos_banho_tosa','salarios','comissoes',
   'combustivel','manutencao','investimento','aluguel','agua_luz_internet',
@@ -38,6 +40,11 @@ export default function NovaDespesaPage() {
   const [petId, setPetId] = useState('')
   const [status, setStatus] = useState<'pago' | 'pendente'>('pago')
   const [dataVenc, setDataVenc] = useState('')
+  const [tipoFavorecido, setTipoFavorecido] = useState<TipoFavorecido>('outro')
+  const [fornecedoresLista, setFornecedoresLista] = useState<{ id: string; nome: string }[]>([])
+  const [funcionariosLista, setFuncionariosLista] = useState<{ id: string; nome_completo: string }[]>([])
+  const [fornecedorId, setFornecedorId] = useState('')
+  const [funcionarioId, setFuncionarioId] = useState('')
   const [recorrente, setRecorrente] = useState(false)
   const [diaVencimento, setDiaVencimento] = useState('')
   const [erro, setErro] = useState('')
@@ -46,6 +53,14 @@ export default function NovaDespesaPage() {
     const supabase = createClient()
     supabase.from('contas_financeiras').select('*').eq('ativo', true).then(({ data }) => {
       if (data) { setContas(data as ContaFinanceira[]); setContaId(data[0]?.id ?? '') }
+    })
+    // Fornecedores ativos (RLS: admin + recepcao)
+    supabase.from('fornecedores').select('id, nome').eq('ativo', true).order('nome').then(({ data }) => {
+      if (data) setFornecedoresLista(data)
+    })
+    // Funcionários ativos (RLS: admin-only; para recepcao a lista vem vazia — tratado na UI)
+    supabase.from('funcionarios').select('id, nome_completo').eq('ativo', true).order('nome_completo').then(({ data }) => {
+      if (data) setFuncionariosLista(data)
     })
   }, [])
 
@@ -82,6 +97,8 @@ export default function NovaDespesaPage() {
       tutor_id: tutorId || null,
       pet_id: petId || null,
       fornecedor: fornecedor || null,
+      fornecedor_id: tipoFavorecido === 'fornecedor' ? (fornecedorId || null) : null,
+      funcionario_id: tipoFavorecido === 'funcionario' ? (funcionarioId || null) : null,
       descricao: descricao || null,
       status,
       data_vencimento: status === 'pendente' ? dataVenc : null,
@@ -89,7 +106,11 @@ export default function NovaDespesaPage() {
       dia_vencimento: recorrente ? Number(diaVencimento) : null,
     })
     setSaving(false)
-    if (error) { setErro(error.message); return }
+    if (error) {
+      console.error('Erro ao salvar despesa:', error)
+      setErro('Não foi possível salvar a despesa. Tente novamente.')
+      return
+    }
     router.push('/financeiro/despesas')
   }
 
@@ -227,6 +248,56 @@ export default function NovaDespesaPage() {
         <label className="text-sm font-semibold text-gray-700">Descrição (opcional)</label>
         <input type="text" placeholder="Ex: Ração Premium 15kg" value={descricao} onChange={e => setDescricao(e.target.value)}
           className="w-full py-3 px-4 rounded-2xl border-2 border-gray-200 focus:border-brand-purple outline-none text-base bg-white" />
+      </div>
+
+      {/* Favorecido (opcional) */}
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-semibold text-gray-700">Favorecido (opcional)</label>
+        <div className="grid grid-cols-3 gap-2">
+          {([
+            ['fornecedor', 'Fornecedor'],
+            ['funcionario', 'Funcionário'],
+            ['outro', 'Outro'],
+          ] as [TipoFavorecido, string][]).map(([t, lbl]) => (
+            <button key={t} type="button"
+              onClick={() => { setTipoFavorecido(t); setFornecedorId(''); setFuncionarioId('') }}
+              className={`py-2.5 rounded-2xl text-sm font-semibold border-2 transition-colors ${
+                tipoFavorecido === t ? 'border-brand-purple bg-purple-50 text-brand-purple' : 'border-gray-200 bg-white text-gray-700'
+              }`}>
+              {lbl}
+            </button>
+          ))}
+        </div>
+
+        {tipoFavorecido === 'fornecedor' && (
+          fornecedoresLista.length === 0 ? (
+            <p className="text-xs text-gray-400 mt-1">
+              Nenhum fornecedor ativo cadastrado. <Link href="/fornecedores/novo" className="text-brand-purple font-semibold">Cadastrar</Link>
+            </p>
+          ) : (
+            <select value={fornecedorId} onChange={e => setFornecedorId(e.target.value)}
+              className="w-full py-3 px-4 rounded-2xl border-2 border-gray-200 focus:border-brand-purple outline-none text-base bg-white mt-1">
+              <option value="">Selecione o fornecedor...</option>
+              {fornecedoresLista.map(f => (
+                <option key={f.id} value={f.id}>{f.nome}</option>
+              ))}
+            </select>
+          )
+        )}
+
+        {tipoFavorecido === 'funcionario' && (
+          funcionariosLista.length === 0 ? (
+            <p className="text-xs text-gray-400 mt-1">Nenhum funcionário disponível.</p>
+          ) : (
+            <select value={funcionarioId} onChange={e => setFuncionarioId(e.target.value)}
+              className="w-full py-3 px-4 rounded-2xl border-2 border-gray-200 focus:border-brand-purple outline-none text-base bg-white mt-1">
+              <option value="">Selecione o funcionário...</option>
+              {funcionariosLista.map(f => (
+                <option key={f.id} value={f.id}>{f.nome_completo}</option>
+              ))}
+            </select>
+          )
+        )}
       </div>
 
       <div className="flex flex-col gap-1">

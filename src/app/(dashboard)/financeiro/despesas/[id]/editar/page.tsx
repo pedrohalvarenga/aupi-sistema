@@ -10,6 +10,8 @@ import CurrencyInput from '@/components/financeiro/CurrencyInput'
 import { AREA_LABELS, CATEGORIA_DESPESA_LABELS, isInvestimento } from '@/lib/financeiro'
 import type { ContaFinanceira, AreaNegocio, CategoriaDespesa } from '@/types/financeiro'
 
+type TipoFavorecido = 'fornecedor' | 'funcionario' | 'outro'
+
 const CATEGORIAS_DESPESA: CategoriaDespesa[] = [
   'racao_petiscos','limpeza','produtos_banho_tosa','salarios','comissoes',
   'combustivel','manutencao','investimento','aluguel','agua_luz_internet',
@@ -34,6 +36,11 @@ export default function EditarDespesaPage() {
   const [dataVenc, setDataVenc] = useState('')
   const [recorrente, setRecorrente] = useState(false)
   const [diaVencimento, setDiaVencimento] = useState('')
+  const [tipoFavorecido, setTipoFavorecido] = useState<TipoFavorecido>('outro')
+  const [fornecedoresLista, setFornecedoresLista] = useState<{ id: string; nome: string }[]>([])
+  const [funcionariosLista, setFuncionariosLista] = useState<{ id: string; nome_completo: string }[]>([])
+  const [fornecedorId, setFornecedorId] = useState('')
+  const [funcionarioId, setFuncionarioId] = useState('')
   const [erro, setErro] = useState('')
 
   useEffect(() => {
@@ -41,8 +48,12 @@ export default function EditarDespesaPage() {
     Promise.all([
       supabase.from('contas_financeiras').select('*').eq('ativo', true),
       supabase.from('despesas').select('*').eq('id', id).single(),
-    ]).then(([contasRes, despesaRes]) => {
+      supabase.from('fornecedores').select('id, nome').eq('ativo', true).order('nome'),
+      supabase.from('funcionarios').select('id, nome_completo').eq('ativo', true).order('nome_completo'),
+    ]).then(([contasRes, despesaRes, fornRes, funcRes]) => {
       if (contasRes.data) setContas(contasRes.data as ContaFinanceira[])
+      if (fornRes.data) setFornecedoresLista(fornRes.data)
+      if (funcRes.data) setFuncionariosLista(funcRes.data)
       const d = despesaRes.data
       if (d) {
         setData(d.data)
@@ -56,6 +67,9 @@ export default function EditarDespesaPage() {
         setDataVenc(d.data_vencimento ?? '')
         setRecorrente(d.recorrente ?? false)
         setDiaVencimento(d.dia_vencimento?.toString() ?? '')
+        if (d.fornecedor_id) { setTipoFavorecido('fornecedor'); setFornecedorId(d.fornecedor_id) }
+        else if (d.funcionario_id) { setTipoFavorecido('funcionario'); setFuncionarioId(d.funcionario_id) }
+        else setTipoFavorecido('outro')
       }
       setLoading(false)
     })
@@ -71,6 +85,8 @@ export default function EditarDespesaPage() {
       data, valor, area, categoria,
       conta_id: contaId,
       fornecedor: fornecedor || null,
+      fornecedor_id: tipoFavorecido === 'fornecedor' ? (fornecedorId || null) : null,
+      funcionario_id: tipoFavorecido === 'funcionario' ? (funcionarioId || null) : null,
       descricao: descricao || null,
       status,
       data_vencimento: status === 'pendente' ? dataVenc : null,
@@ -78,7 +94,11 @@ export default function EditarDespesaPage() {
       dia_vencimento: recorrente ? Number(diaVencimento) : null,
     }).eq('id', id)
     setSaving(false)
-    if (error) { setErro(error.message); return }
+    if (error) {
+      console.error('Erro ao salvar despesa:', error)
+      setErro('Não foi possível salvar as alterações. Tente novamente.')
+      return
+    }
     router.push(`/financeiro/despesas/${id}`)
   }
 
@@ -156,6 +176,56 @@ export default function EditarDespesaPage() {
         <label className="text-sm font-semibold text-gray-700">Descrição (opcional)</label>
         <input type="text" value={descricao} onChange={e => setDescricao(e.target.value)}
           className="w-full py-3 px-4 rounded-2xl border-2 border-gray-200 focus:border-brand-purple outline-none text-base bg-white" />
+      </div>
+
+      {/* Favorecido (opcional) */}
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-semibold text-gray-700">Favorecido (opcional)</label>
+        <div className="grid grid-cols-3 gap-2">
+          {([
+            ['fornecedor', 'Fornecedor'],
+            ['funcionario', 'Funcionário'],
+            ['outro', 'Outro'],
+          ] as [TipoFavorecido, string][]).map(([t, lbl]) => (
+            <button key={t} type="button"
+              onClick={() => { setTipoFavorecido(t); setFornecedorId(''); setFuncionarioId('') }}
+              className={`py-2.5 rounded-2xl text-sm font-semibold border-2 transition-colors ${
+                tipoFavorecido === t ? 'border-brand-purple bg-purple-50 text-brand-purple' : 'border-gray-200 bg-white text-gray-700'
+              }`}>
+              {lbl}
+            </button>
+          ))}
+        </div>
+
+        {tipoFavorecido === 'fornecedor' && (
+          fornecedoresLista.length === 0 ? (
+            <p className="text-xs text-gray-400 mt-1">
+              Nenhum fornecedor ativo cadastrado. <Link href="/fornecedores/novo" className="text-brand-purple font-semibold">Cadastrar</Link>
+            </p>
+          ) : (
+            <select value={fornecedorId} onChange={e => setFornecedorId(e.target.value)}
+              className="w-full py-3 px-4 rounded-2xl border-2 border-gray-200 focus:border-brand-purple outline-none text-base bg-white mt-1">
+              <option value="">Selecione o fornecedor...</option>
+              {fornecedoresLista.map(f => (
+                <option key={f.id} value={f.id}>{f.nome}</option>
+              ))}
+            </select>
+          )
+        )}
+
+        {tipoFavorecido === 'funcionario' && (
+          funcionariosLista.length === 0 ? (
+            <p className="text-xs text-gray-400 mt-1">Nenhum funcionário disponível.</p>
+          ) : (
+            <select value={funcionarioId} onChange={e => setFuncionarioId(e.target.value)}
+              className="w-full py-3 px-4 rounded-2xl border-2 border-gray-200 focus:border-brand-purple outline-none text-base bg-white mt-1">
+              <option value="">Selecione o funcionário...</option>
+              {funcionariosLista.map(f => (
+                <option key={f.id} value={f.id}>{f.nome_completo}</option>
+              ))}
+            </select>
+          )
+        )}
       </div>
 
       <div className="flex flex-col gap-1">

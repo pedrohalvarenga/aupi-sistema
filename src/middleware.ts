@@ -16,6 +16,7 @@ const GUARD: { prefix: string; area?: AreaKey; soAdmin?: boolean }[] = [
   { prefix: '/pets', area: 'pets' },
   { prefix: '/tutores', area: 'tutores' },
   { prefix: '/financeiro', area: 'financeiro' },
+  { prefix: '/fornecedores', area: 'financeiro' },
   { prefix: '/importar', area: 'importar' },
 ]
 

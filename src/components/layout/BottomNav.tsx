@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   CalendarCheck, Building2, Scissors, Dog, Users, DollarSign,
-  Home, Settings, Car, Menu, X,
+  Home, Settings, Car, Menu, X, Truck,
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -75,6 +75,16 @@ const moreItems: MoreItem[] = [
     iconColor: 'text-brand-orange',
     iconBg: 'bg-orange-100',
     modulo: 'mod_transporte',
+  },
+  {
+    href: '/fornecedores',
+    label: 'Fornecedores',
+    sublabel: 'Quem te fornece e presta serviço',
+    icon: Truck,
+    roles: ['admin', 'recepcao'],
+    iconColor: 'text-brand-purple',
+    iconBg: 'bg-purple-100',
+    area: 'financeiro',
   },
 ]
 

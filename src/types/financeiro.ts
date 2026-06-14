@@ -63,6 +63,8 @@ export interface Despesa {
   tutor_id?: string
   pet_id?: string
   fornecedor?: string
+  fornecedor_id?: string | null
+  funcionario_id?: string | null
   descricao?: string
   status: StatusFinanceiro
   data_vencimento?: string

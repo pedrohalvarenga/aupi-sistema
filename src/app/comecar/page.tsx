@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { slugify, APP_HOST } from '@/lib/dominio'
+import { fbTrack } from '@/lib/fbpixel'
 import { Globe } from 'lucide-react'
 
 const SEGMENTOS = [
