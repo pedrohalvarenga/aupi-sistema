@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { slugify, APP_HOST } from '@/lib/dominio'
 import { fbTrack } from '@/lib/fbpixel'
+import { gtagEvent } from '@/lib/gtag'
 import { Globe } from 'lucide-react'
 
 const SEGMENTOS = [
@@ -53,8 +54,9 @@ export default function OnboardingPage() {
       return
     }
 
-    // Conversão para o Meta Pixel (otimiza a campanha por quem realmente se cadastra)
+    // Conversões — Meta Pixel e GA4 (importado no Google Ads como ação de conversão)
     fbTrack('CompleteRegistration')
+    gtagEvent('sign_up', { method: 'email' })
 
     // Login automático e segue para o wizard de personalização da marca
     const supabase = createClient()
