@@ -5,7 +5,7 @@ import { Resend } from 'resend'
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const token = searchParams.get('token')
-  if (token !== process.env.CRON_SECRET) {
+  if (token !== process.env.TEST_EMAIL_TOKEN) {
     return NextResponse.json({ error: 'Sem permissão' }, { status: 401 })
   }
 
