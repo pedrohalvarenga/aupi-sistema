@@ -82,8 +82,7 @@ export default function ConfigurarWizardPage() {
         updated_at: new Date().toISOString(),
       }).eq('id', empresa.id)
       if (error) { setErro('Erro ao salvar: ' + error.message); return }
-      router.push('/dashboard')
-      router.refresh()
+      window.location.href = `https://${empresa.slug}.app.aupipet.com.br/tutores/novo`
     } catch {
       setErro('Falha de conexão. Tente novamente.')
     } finally {

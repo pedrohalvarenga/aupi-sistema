@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { Resend } from 'resend'
 
 function gerarSlug(nome: string): string {
   return nome
@@ -69,13 +70,58 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: msg }, { status: 400 })
   }
 
-  // 3. Contas financeiras iniciais (genéricas e zeradas — o dono edita depois)
+  // 3. Contas financeiras iniciais — padrão do sistema: apenas 2, zeradas.
+  //    O cliente cria as demais contas que precisar em Financeiro > Contas.
   await admin.from('contas_financeiras').insert([
-    { empresa_id: empresa.id, nome: 'Conta Bancária 01', tipo: 'banco', saldo_inicial: 0, ativo: true },
-    { empresa_id: empresa.id, nome: 'Conta Bancária 02', tipo: 'banco', saldo_inicial: 0, ativo: true },
-    { empresa_id: empresa.id, nome: 'Máquina de Cartão', tipo: 'maquina_cartao', saldo_inicial: 0, ativo: true },
-    { empresa_id: empresa.id, nome: 'Dinheiro (Caixa)', tipo: 'dinheiro', saldo_inicial: 0, ativo: true },
+    { empresa_id: empresa.id, nome: 'Conta Corrente', tipo: 'banco', saldo_inicial: 0, ativo: true },
+    { empresa_id: empresa.id, nome: 'Dinheiro', tipo: 'dinheiro', saldo_inicial: 0, ativo: true },
   ])
+
+  // 4. E-mail de boas-vindas com link direto para o primeiro passo
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const url = `https://${empresa.slug}.app.aupipet.com.br`
+    await resend.emails.send({
+      from: process.env.RESEND_FROM ?? 'Aupi <no-reply@aupipet.com.br>',
+      to: email,
+      subject: `${nomeEmpresa}, seu sistema está pronto! 🐾`,
+      html: `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:480px;margin:32px auto;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.06);">
+    <div style="background:#D98232;padding:32px 28px 24px;">
+      <p style="margin:0;color:rgba(255,255,255,.8);font-size:13px;">Aupi Pet</p>
+      <h1 style="margin:8px 0 0;color:#fff;font-size:24px;font-weight:700;">Bem-vindo, ${nome.split(' ')[0]}! 🎉</h1>
+    </div>
+    <div style="padding:28px;">
+      <p style="margin:0 0 16px;color:#374151;font-size:15px;line-height:1.6;">
+        O sistema da <strong>${nomeEmpresa}</strong> está configurado e pronto para usar.<br>
+        Seu primeiro passo é cadastrar um cliente para começar a controlar as presenças e os pagamentos.
+      </p>
+      <a href="${url}/tutores/novo"
+        style="display:block;background:#D98232;color:#fff;text-decoration:none;text-align:center;padding:14px 24px;border-radius:14px;font-size:15px;font-weight:600;margin-bottom:24px;">
+        Cadastrar primeiro cliente →
+      </a>
+      <div style="background:#f8f9fa;border-radius:14px;padding:16px;">
+        <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;">Seu endereço de acesso</p>
+        <p style="margin:0;font-size:14px;font-weight:700;color:#111827;">${url}</p>
+        <p style="margin:6px 0 0;font-size:12px;color:#9ca3af;">Salve este link — é por aqui que você e sua equipe entram.</p>
+      </div>
+      <hr style="border:none;border-top:1px solid #f3f4f6;margin:24px 0;">
+      <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
+        Dúvidas? Responda este e-mail ou fale pelo WhatsApp.<br>
+        <a href="${url}" style="color:#D98232;text-decoration:none;">Acessar o sistema</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`,
+    })
+  } catch {
+    // e-mail falhou, mas o cadastro foi bem-sucedido — não bloqueia
+  }
 
   return NextResponse.json({ ok: true, slug: empresa.slug })
 }

@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Dog, CalendarCheck, Users, TrendingUp, Moon, Scissors, Car } from 'lucide-react'
+import { Dog, CalendarCheck, Users, TrendingUp, Moon, Scissors, Car, ChevronRight } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import { formatDate } from '@/lib/utils'
 import { STATUS_ROTA_LABELS, STATUS_ROTA_CORES } from '@/lib/transporte'
@@ -58,11 +58,11 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user!.id).single<Profile>()
 
-  // Motorista trabalha só com o transporte
   if (profile?.role === 'motorista') redirect('/transportes')
 
   const [stats, rotasHoje, empresa] = await Promise.all([getStats(), getRotasHoje(), getEmpresa()])
   const hoje = formatDate(new Date(), "EEEE, dd 'de' MMMM")
+  const isNovo = stats.totalTutores === 0 && stats.totalPets === 0
 
   return (
     <div className="py-6 flex flex-col gap-6">
@@ -77,6 +77,51 @@ export default async function DashboardPage() {
           Olá, {profile?.nome.split(' ')[0]}! 👋
         </h1>
       </div>
+
+      {/* Primeiros passos — só para usuários novos sem dados */}
+      {isNovo && (
+        <div className="rounded-3xl bg-brand-purple p-4 flex flex-col gap-3">
+          <div>
+            <p className="text-white font-bold text-base">Por onde começar?</p>
+            <p className="text-white/70 text-sm">Siga os passos abaixo para ter o sistema funcionando hoje.</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Link href="/tutores/novo"
+              className="flex items-center gap-3 bg-white rounded-2xl p-3 active:opacity-90">
+              <div className="w-8 h-8 rounded-xl bg-brand-purple flex items-center justify-center shrink-0">
+                <span className="text-white text-xs font-bold">1</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-900">Cadastrar primeiro cliente (tutor)</p>
+                <p className="text-xs text-gray-500">Nome, contato e o pet dele</p>
+              </div>
+              <ChevronRight size={16} className="text-gray-400 shrink-0" />
+            </Link>
+            <Link href="/creche"
+              className="flex items-center gap-3 bg-white/20 rounded-2xl p-3 active:opacity-90">
+              <div className="w-8 h-8 rounded-xl bg-white/30 flex items-center justify-center shrink-0">
+                <span className="text-white text-xs font-bold">2</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-white">Fazer a primeira chamada</p>
+                <p className="text-xs text-white/70">Check-in dos pets presentes hoje</p>
+              </div>
+              <ChevronRight size={16} className="text-white/60 shrink-0" />
+            </Link>
+            <Link href="/financeiro"
+              className="flex items-center gap-3 bg-white/20 rounded-2xl p-3 active:opacity-90">
+              <div className="w-8 h-8 rounded-xl bg-white/30 flex items-center justify-center shrink-0">
+                <span className="text-white text-xs font-bold">3</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-white">Registrar um pagamento</p>
+                <p className="text-xs text-white/70">Controle de receitas e inadimplência</p>
+              </div>
+              <ChevronRight size={16} className="text-white/60 shrink-0" />
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Cards de estatísticas */}
       <div className="grid grid-cols-2 gap-3">
