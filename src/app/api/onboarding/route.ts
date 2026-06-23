@@ -98,11 +98,11 @@ export async function POST(request: Request) {
     <div style="padding:28px;">
       <p style="margin:0 0 16px;color:#374151;font-size:15px;line-height:1.6;">
         O sistema da <strong>${nomeEmpresa}</strong> está configurado e pronto para usar.<br>
-        Seu primeiro passo é cadastrar um cliente para começar a controlar as presenças e os pagamentos.
+        Seu primeiro passo é cadastrar um pet — o tutor entra no mesmo cadastro e a IA até lê o cartão de vacina por foto. É o que destrava agenda, ficha, cobrança e relatórios.
       </p>
-      <a href="${url}/tutores/novo"
+      <a href="${url}/pets/novo"
         style="display:block;background:#D98232;color:#fff;text-decoration:none;text-align:center;padding:14px 24px;border-radius:14px;font-size:15px;font-weight:600;margin-bottom:24px;">
-        Cadastrar primeiro cliente →
+        Cadastrar primeiro pet →
       </a>
       <div style="background:#f8f9fa;border-radius:14px;padding:16px;">
         <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;">Seu endereço de acesso</p>

@@ -35,8 +35,7 @@ export default function TrialBanner({ trialAte, status }: Props) {
         </p>
       </div>
       <Link
-        href="https://aupipet.com.br/#precos"
-        target="_blank"
+        href="/assinar"
         className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-xl text-white"
         style={{ background: 'var(--brand-caramel)' }}
       >
