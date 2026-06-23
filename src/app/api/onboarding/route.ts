@@ -109,8 +109,10 @@ export async function POST(request: Request) {
         <p style="margin:0;font-size:14px;font-weight:700;color:#111827;">${url}</p>
         <p style="margin:6px 0 0;font-size:12px;color:#9ca3af;">Salve este link — é por aqui que você e sua equipe entram.</p>
       </div>
-      <div style="text-align:center;margin-bottom:4px;">
-        <a href="${url}/ajuda" style="color:#D98232;text-decoration:none;font-size:13px;font-weight:600;">📘 Ver o guia de primeiros passos</a>
+      <div style="text-align:center;margin-bottom:4px;font-size:13px;font-weight:600;">
+        <a href="${url}/ajuda" style="color:#D98232;text-decoration:none;">📘 Guia de primeiros passos</a>
+        &nbsp;·&nbsp;
+        <a href="https://aupipet.com.br/guia-aupipet.pdf" style="color:#D98232;text-decoration:none;">Baixar em PDF</a>
       </div>
       <hr style="border:none;border-top:1px solid #f3f4f6;margin:20px 0;">
       <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
