@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { Resend } from 'resend'
+import { getResend, RESEND_FROM } from '@/lib/resend'
 
 function gerarSlug(nome: string): string {
   return nome
@@ -79,10 +79,10 @@ export async function POST(request: Request) {
 
   // 4. E-mail de boas-vindas com link direto para o primeiro passo
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY)
+    const resend = getResend()
     const url = `https://${empresa.slug}.app.aupipet.com.br`
     await resend.emails.send({
-      from: process.env.RESEND_FROM ?? 'Aupi <no-reply@aupipet.com.br>',
+      from: RESEND_FROM,
       to: email,
       subject: `${nomeEmpresa}, seu sistema está pronto! 🐾`,
       html: `

@@ -1,12 +1,13 @@
 ﻿import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { Resend } from 'resend'
+import { getResend, RESEND_FROM } from '@/lib/resend'
+import type { Resend } from 'resend'
 
 interface EmpresaInfo { id: string; nome: string; cidade: string | null; cor_primaria: string; cor_secundaria: string }
 
 export async function POST(req: Request) {
-  const resend = new Resend(process.env.RESEND_API_KEY)
+  const resend = getResend()
   try {
     const { data: dataParam } = await req.json().catch(() => ({}))
     const data: string = dataParam ?? new Date().toISOString().split('T')[0]
@@ -116,7 +117,7 @@ async function gerarEEnviar(supabase: any, empresa: EmpresaInfo, data: string, r
     const html = buildHtmlRelatorio({ empresa, data: dataFmt, entradas, saidas, hospedados, totalSaidas, plantonista })
 
     const { error: emailError } = await resend.emails.send({
-      from: process.env.RESEND_FROM ?? 'Aupipet <noreply@aupipet.com.br>',
+      from: RESEND_FROM,
       to: emails,
       subject: `${empresa.nome} — Relatório Hotel ${data}`,
       html,

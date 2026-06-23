@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { Resend } from 'resend'
+import { getResend, RESEND_FROM } from '@/lib/resend'
 
 // Cron diário: GET /api/cron/reengajamento  (schedule "0 12 * * *" = 9h BRT)
 // Recupera empresas que se cadastraram e NUNCA ativaram (0 pets).
@@ -94,7 +94,7 @@ export async function GET(req: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
-  const resend = new Resend(process.env.RESEND_API_KEY)
+  const resend = getResend()
 
   const enviados: { empresa: string; dia: number }[] = []
   const erros: string[] = []
@@ -131,7 +131,7 @@ export async function GET(req: Request) {
       const primeiroNome = (prof.nome || emp.nome || '').split(' ')[0] || 'tudo bem'
       try {
         await resend.emails.send({
-          from: process.env.RESEND_FROM ?? 'Aupi <no-reply@aupipet.com.br>',
+          from: RESEND_FROM,
           to: email,
           subject: assunto(dia, emp.nome),
           html: corpo(dia, emp.nome, primeiroNome, url),
@@ -174,7 +174,7 @@ export async function GET(req: Request) {
       const primeiroNome = (prof.nome || emp.nome || '').split(' ')[0] || 'tudo bem'
       try {
         await resend.emails.send({
-          from: process.env.RESEND_FROM ?? 'Aupi <no-reply@aupipet.com.br>',
+          from: RESEND_FROM,
           to: email,
           subject: assuntoVenc(dias, emp.nome),
           html: corpoVenc(dias, emp.nome, primeiroNome, url),

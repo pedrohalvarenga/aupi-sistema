@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { Resend } from 'resend'
+import { getResend, RESEND_FROM } from '@/lib/resend'
 import { addDays, parseISO, format, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY)
+  const resend = getResend()
   const adminClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -122,7 +122,7 @@ export async function GET(request: Request) {
 </html>`
 
     const { error: emailError } = await resend.emails.send({
-      from: process.env.RESEND_FROM ?? 'Aupipet <noreply@aupipet.com.br>',
+      from: RESEND_FROM,
       to: empresa.email_contato!,
       subject: `🐾 Vacinas do mês — ${mesAno} | ${empresa.nome}`,
       html,

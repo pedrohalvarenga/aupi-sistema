@@ -1,7 +1,7 @@
 ﻿import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
+import { getResend, RESEND_FROM } from '@/lib/resend'
 
 const MESES = [
   '', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -9,7 +9,7 @@ const MESES = [
 ]
 
 const FORMA_LABELS: Record<string, string> = {
-  pix_pagbank: 'Pix PagBank', pix_c6: 'Pix C6',
+  pix: 'Pix', pix_pagbank: 'Pix PagBank', pix_c6: 'Pix C6',
   dinheiro: 'Dinheiro', debito: 'Débito', credito: 'Crédito',
 }
 
@@ -71,9 +71,9 @@ export async function POST(request: Request) {
     empresa: emp,
   })
 
-  const resend = new Resend(process.env.RESEND_API_KEY)
+  const resend = getResend()
   const { error: emailError } = await resend.emails.send({
-    from: process.env.RESEND_FROM ?? 'Aupipet <noreply@aupipet.com.br>',
+    from: RESEND_FROM,
     to: [tutor.email],
     subject: `Extrato ${emp.nome} — ${MESES[mes]}/${ano}`,
     html,

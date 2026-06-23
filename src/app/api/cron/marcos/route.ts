@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { Resend } from 'resend'
+import { getResend, RESEND_FROM } from '@/lib/resend'
 
 // Cron diário: GET /api/cron/marcos  (schedule "0 13 * * *" = 10h BRT)
 // (1) CELEBRAÇÃO: e-mail quando a empresa cruza um marco pela 1ª vez
@@ -47,8 +47,8 @@ export async function GET(req: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
-  const resend = new Resend(process.env.RESEND_API_KEY)
-  const from = process.env.RESEND_FROM ?? 'Aupi <no-reply@aupipet.com.br>'
+  const resend = getResend()
+  const from = RESEND_FROM
 
   const { data: empresas, error } = await admin
     .from('empresas')
