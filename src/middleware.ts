@@ -65,7 +65,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Rotas públicas — não exigem autenticação
-  const publicPaths = ['/login', '/comecar', '/api/onboarding', '/api/asaas/webhook', '/api/infinitepay/webhook', '/api/empresa-publica', '/cadastro', '/api/cadastro-publico', '/api/upload-foto-pet', '/api/analisar-vacinas', '/api/auth/email-por-nome']
+  const publicPaths = ['/login', '/comecar', '/api/onboarding', '/api/asaas/webhook', '/api/infinitepay/webhook', '/api/empresa-publica', '/cadastro', '/api/cadastro-publico', '/api/upload-foto-pet', '/api/analisar-vacinas', '/api/auth/email-por-nome', '/api/test-email']
   const isPublic = publicPaths.some(p => pathname.startsWith(p))
 
   // Redireciona para login se não autenticado
