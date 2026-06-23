@@ -8,7 +8,41 @@ import { Resend } from 'resend'
 // para o passo que falta (/pets/novo). WhatsApp segue manual (superadmin),
 // pois não há provedor de envio automático integrado.
 const OFFSETS = [1, 3, 7]
+const OFFSETS_VENC = [3, 0] // dias ANTES de trial_ate (D-3 e no dia)
 const SEED_EMPRESA = '00000000-0000-0000-0000-000000000001' // Play Dog — nunca tocar
+
+function assuntoVenc(dias: number, nome: string): string {
+  return dias === 0
+    ? `Hoje é o último dia de teste da ${nome}`
+    : `Faltam ${dias} dias no teste da ${nome}`
+}
+
+function corpoVenc(dias: number, nome: string, primeiroNome: string, url: string): string {
+  const intro = dias === 0
+    ? 'Seu período de teste termina hoje. Para não perder o acesso nem os dados que você já cadastrou, escolha um plano agora — leva 2 minutos.'
+    : `Seu teste termina em ${dias} dias. Você já colocou dados no sistema — assine para manter tudo funcionando sem interrupção.`
+  return `
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f8f9fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:480px;margin:32px auto;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.06);">
+    <div style="background:#D98232;padding:28px;">
+      <p style="margin:0;color:rgba(255,255,255,.8);font-size:13px;">Aupi Pet</p>
+      <h1 style="margin:8px 0 0;color:#fff;font-size:22px;font-weight:700;">${primeiroNome}, seu teste está acabando</h1>
+    </div>
+    <div style="padding:28px;">
+      <p style="margin:0 0 16px;color:#374151;font-size:15px;line-height:1.6;">${intro}</p>
+      <a href="${url}/assinar" style="display:block;background:#D98232;color:#fff;text-decoration:none;text-align:center;padding:14px 24px;border-radius:14px;font-size:15px;font-weight:600;margin-bottom:20px;">
+        Escolher meu plano →
+      </a>
+      <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
+        Seus dados ficam guardados em segurança.<br>
+        <a href="${url}" style="color:#D98232;text-decoration:none;">Acessar a ${nome}</a>
+      </p>
+    </div>
+  </div>
+</body></html>`
+}
 
 function assunto(dia: number, nome: string): string {
   if (dia === 1) return `${nome}, faltou só cadastrar o primeiro pet 🐾`
@@ -109,5 +143,48 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, enviados, erros })
+  // ── Pass 2: aviso de vencimento do trial (D-3 e D0) para quem JÁ ativou ──
+  const avisos: { empresa: string; dias: number }[] = []
+  for (const dias of OFFSETS_VENC) {
+    const alvo = new Date(); alvo.setUTCHours(0, 0, 0, 0); alvo.setUTCDate(alvo.getUTCDate() + dias)
+    const alvoStr = alvo.toISOString().split('T')[0]
+
+    const { data: empresas, error } = await admin
+      .from('empresas')
+      .select('id, nome, slug')
+      .eq('status', 'trial')
+      .neq('id', SEED_EMPRESA)
+      .eq('trial_ate', alvoStr)
+    if (error) { erros.push(`venc D-${dias}: ${error.message}`); continue }
+
+    for (const emp of empresas ?? []) {
+      // Só avisa quem ativou (tem ao menos 1 pet) — não-ativados recebem o Pass 1
+      const { count } = await admin
+        .from('pets').select('id', { count: 'exact', head: true }).eq('empresa_id', emp.id)
+      if ((count ?? 0) === 0) continue
+
+      const { data: prof } = await admin
+        .from('profiles').select('id, nome').eq('empresa_id', emp.id).eq('role', 'admin').limit(1).maybeSingle()
+      if (!prof) continue
+      const { data: u } = await admin.auth.admin.getUserById(prof.id)
+      const email = u?.user?.email
+      if (!email) continue
+
+      const url = `https://${emp.slug}.app.aupipet.com.br`
+      const primeiroNome = (prof.nome || emp.nome || '').split(' ')[0] || 'tudo bem'
+      try {
+        await resend.emails.send({
+          from: process.env.RESEND_FROM ?? 'Aupi <no-reply@aupipet.com.br>',
+          to: email,
+          subject: assuntoVenc(dias, emp.nome),
+          html: corpoVenc(dias, emp.nome, primeiroNome, url),
+        })
+        avisos.push({ empresa: emp.slug, dias })
+      } catch (e: unknown) {
+        erros.push(`venc ${emp.slug} D-${dias}: ${e instanceof Error ? e.message : String(e)}`)
+      }
+    }
+  }
+
+  return NextResponse.json({ ok: true, enviados, avisos, erros })
 }

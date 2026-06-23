@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Dog, CalendarCheck, Users, TrendingUp, Moon, Scissors, Car } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import { formatDate } from '@/lib/utils'
+import { formatCurrency } from '@/lib/financeiro'
 import { STATUS_ROTA_LABELS, STATUS_ROTA_CORES } from '@/lib/transporte'
 import type { Rota, Transporte } from '@/types/transporte'
 import type { Profile } from '@/types'
@@ -14,8 +15,10 @@ import PrimeirosPassos from '@/components/PrimeirosPassos'
 async function getStats() {
   const supabase = await createClient()
   const hoje = new Date().toISOString().split('T')[0]
+  const agora = new Date()
+  const inicioMes = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-01`
 
-  const [presencasHoje, totalPets, totalTutores, hospedadosHoje, banhoHoje, presencasTotal, receitasTotal] = await Promise.all([
+  const [presencasHoje, totalPets, totalTutores, hospedadosHoje, banhoHoje, presencasTotal, receitasTotal, receitasMesRes] = await Promise.all([
     supabase.from('presencas').select('id', { count: 'exact' }).eq('data', hoje).is('checkout_at', null),
     supabase.from('pets').select('id', { count: 'exact' }).eq('ativo', true),
     supabase.from('tutores').select('id', { count: 'exact' }),
@@ -25,7 +28,11 @@ async function getStats() {
     // Sinais de ativação (qualquer registro já existente): 1ª chamada e 1º pagamento
     supabase.from('presencas').select('id', { count: 'exact', head: true }),
     supabase.from('receitas').select('id', { count: 'exact', head: true }),
+    // Receita recebida no mês corrente (mesma regra do Financeiro: status pago, valor líquido)
+    supabase.from('receitas').select('valor, valor_liquido').gte('data', inicioMes).eq('status', 'pago'),
   ])
+
+  const receitaMes = (receitasMesRes.data ?? []).reduce((s, r) => s + (r.valor_liquido ?? r.valor), 0)
 
   return {
     petsPresentes: presencasHoje.count ?? 0,
@@ -35,6 +42,7 @@ async function getStats() {
     banhoHoje: banhoHoje.count ?? 0,
     presencasTotal: presencasTotal.count ?? 0,
     receitasTotal: receitasTotal.count ?? 0,
+    receitaMes,
   }
 }
 
@@ -115,7 +123,7 @@ export default async function DashboardPage() {
 
         <Card className="bg-brand-orange text-white">
           <TrendingUp size={28} className="mb-2 opacity-80" />
-          <p className="text-3xl font-bold">—</p>
+          <p className="text-2xl font-bold">{formatCurrency(stats.receitaMes)}</p>
           <p className="text-sm opacity-80">Receita do mês</p>
         </Card>
       </div>
