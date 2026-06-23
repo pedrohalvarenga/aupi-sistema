@@ -213,6 +213,11 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Ajuda */}
+      <Link href="/ajuda" className="text-center text-sm font-semibold py-2" style={{ color: 'var(--brand-purple)' }}>
+        Não sabe por onde começar? Ver o guia de uso →
+      </Link>
     </div>
   )
 }

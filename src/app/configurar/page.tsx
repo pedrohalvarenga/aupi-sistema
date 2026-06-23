@@ -124,8 +124,12 @@ export default function ConfigurarWizardPage() {
         {passo === 2 && (
           <div className="flex flex-col gap-4 mt-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">A cara do seu negócio</h1>
-              <p className="text-gray-500 text-sm">Suba seu logo — detectamos suas cores sozinhos.</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Sua marca <span className="text-gray-400 font-semibold text-base">· opcional</span>
+              </h1>
+              <p className="text-gray-500 text-sm">
+                Tem o logo à mão? Suba agora e detectamos suas cores. No celular sem o arquivo? Sem problema — <strong>pule e faça depois</strong> no computador, em “Minha empresa”.
+              </p>
             </div>
 
             <label className="border-2 border-dashed border-gray-200 rounded-2xl p-5 text-center bg-white cursor-pointer block">
@@ -177,7 +181,9 @@ export default function ConfigurarWizardPage() {
             {erro && <p className="text-sm text-red-500 text-center">{erro}</p>}
             <div className="flex gap-3">
               <Button variant="ghost" className="flex-1" onClick={() => setPasso(1)}>Voltar</Button>
-              <Button className="flex-1" onClick={() => setPasso(3)}>Continuar</Button>
+              <Button className="flex-1" onClick={() => setPasso(3)}>
+                {empresa.logo_url ? 'Continuar' : 'Pular por agora'}
+              </Button>
             </div>
           </div>
         )}

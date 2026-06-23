@@ -109,9 +109,12 @@ export async function POST(request: Request) {
         <p style="margin:0;font-size:14px;font-weight:700;color:#111827;">${url}</p>
         <p style="margin:6px 0 0;font-size:12px;color:#9ca3af;">Salve este link — é por aqui que você e sua equipe entram.</p>
       </div>
-      <hr style="border:none;border-top:1px solid #f3f4f6;margin:24px 0;">
+      <div style="text-align:center;margin-bottom:4px;">
+        <a href="${url}/ajuda" style="color:#D98232;text-decoration:none;font-size:13px;font-weight:600;">📘 Ver o guia de primeiros passos</a>
+      </div>
+      <hr style="border:none;border-top:1px solid #f3f4f6;margin:20px 0;">
       <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
-        Dúvidas? Responda este e-mail ou fale pelo WhatsApp.<br>
+        Dúvidas? Responda este e-mail — a gente te ajuda.<br>
         <a href="${url}" style="color:#D98232;text-decoration:none;">Acessar o sistema</a>
       </p>
     </div>
